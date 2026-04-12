@@ -19,12 +19,16 @@ public:
     void SetFromString(std::string value);
 
     bool GetIsNegative();
-    std::vector<int> GetDigits();
+    std::vector<int>& GetDigits();
+    const std::vector<int>& GetDigits() const;
     int GetExponent();
     int GetMaxSignificant();
 
+    void CorrectForSignificance();
+
 
     double GetAsDouble();
+    std::string GetAsString();
 
 protected:
     // Numbers are stored like they would be scientifically written, one digit per entry, first digit is before the decimal point, the others are behind.

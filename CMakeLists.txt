@@ -10,8 +10,15 @@ find_package(Python REQUIRED COMPONENTS Interpreter Development)
 add_subdirectory(pybind11)
 pybind11_add_module(cpp_main
 	backend/cpp_main.cpp
-	backend/number.cpp
+	backend/calculation/number.cpp
+	backend/calculation/addition.cpp
+	backend/calculation/calc_main.cpp
+	backend/split_string.cpp
 )
+
+# target_include_directories(cpp_main PRIVATE
+# 	${CMAKE_SOURCE_DIR}/backend
+# )
 
 set_target_properties(cpp_main PROPERTIES
 	LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}"

@@ -76,15 +76,24 @@ void Number::SetFromString(std::string value) {
     bool exponentSet = false;
     for (int i = 0; i < value.size(); i++) {
         if (value.at(i) == '.') {
-            exponent = value.size() - i - 2; // -1 for the dot, -1 because the first digit is before the dot
-            exponentSet = true;
+            // Exponent equals count of digits before the decimal point minus 1.
+            if (!exponentSet) {
+                exponent = static_cast<int>(newDigits.size()) - 1;
+                exponentSet = true;
+            }
         } else if (value.at(i) >= '0' && value.at(i) <= '9') {
             newDigits.push_back(value.at(i) - '0');
         }
     }
 
     if (!exponentSet) {
-        exponent = value.size() - 1; // -1 because the first digit is before the dot
+        exponent = static_cast<int>(newDigits.size()) - 1;
+    }
+
+    if (newDigits.empty()) {
+        newDigits.push_back(0);
+        exponent = 0;
+        isNegative = false;
     }
     SetDigits(newDigits);
 }
@@ -99,7 +108,11 @@ bool Number::GetIsNegative() {
     return isNegative;
 }
 
-std::vector<int> Number::GetDigits() {
+std::vector<int>& Number::GetDigits() {
+    return digits;
+}
+
+const std::vector<int>& Number::GetDigits() const {
     return digits;
 }
 
@@ -131,4 +144,41 @@ double Number::GetAsDouble() {
     }
 
     return result;
+}
+
+
+std::string Number::GetAsString() {
+    std::string result = "";
+
+    if (isNegative) {
+        result += "-";
+    }
+
+    if (digits.empty()) {
+        return "0";
+    }
+
+    // Scientific notation
+    for (int i = 0; i < digits.size(); i++) {
+        if (i == 1) {
+            result += ".";
+        }
+        result += std::to_string(digits.at(i));
+    }
+    if (exponent != 0) {
+        result += "*10^" + std::to_string(exponent);
+    }
+
+    return result;
+}
+
+
+
+
+
+// Correct for the significance¨
+void Number::CorrectForSignificance() {
+    if (digits.size() > maxSignificant) {
+        SetDigits(digits);
+    }
 }
