@@ -1,0 +1,41 @@
+{
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "cmake.configureOnOpen": true,
+    "C_Cpp.files.exclude": {
+        "**/pybind11/**": true
+    },
+    "C_Cpp.codeAnalysis.exclude": {
+        "**/pybind11/**": true
+    },
+    "python.analysis.exclude": [
+        "pybind11",
+        "**/pybind11/**"
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}",
+        "${workspaceFolder}/typings"
+    ],
+    "python.analysis.stubPath": "typings",
+    "python.analysis.ignore": [
+        "pybind11",
+        "**/pybind11/**"
+    ],
+    "files.exclude": {
+        "pybind11": true
+    },
+    "search.exclude": {
+        "pybind11/**": true
+    },
+    "files.watcherExclude": {
+        "**/pybind11/**": true
+    },
+    "python.analysis.diagnosticMode": "workspace",
+    "mypy-type-checker.cwd": "${workspaceFolder}",
+    "mypy-type-checker.args": [
+        "--config-file",
+        "${workspaceFolder}/mypy.ini",
+        "--exclude",
+        "(^|[\\\\/])pybind11([\\\\/]|$)"
+    ]
+
+}

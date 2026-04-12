@@ -1,0 +1,3 @@
+
+
+def TestNumber(input : str, maxSignificant : int) -> float: ...
