@@ -7,7 +7,7 @@
 #include "calculation/base_structures.hpp"
 #include "calculation/number.hpp"
 #include "calculation/addition.hpp"
-
+#include "calculation/subtraction.hpp"
 
 
 std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int maxSignificant) {
@@ -19,6 +19,10 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
         if (c == '+') {
             HandleOperator(parts, currentPart, maxSignificant);
             parts.push_back(std::make_unique<Addition>());
+        }
+        else if (c == '-') {
+            HandleOperator(parts, currentPart, maxSignificant);
+            parts.push_back(std::make_unique<Subtraction>());
         }
 
         else {

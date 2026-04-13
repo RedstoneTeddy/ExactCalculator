@@ -10,10 +10,12 @@ find_package(Python REQUIRED COMPONENTS Interpreter Development)
 add_subdirectory(pybind11)
 pybind11_add_module(cpp_main
 	backend/cpp_main.cpp
-	backend/calculation/number.cpp
-	backend/calculation/addition.cpp
-	backend/calculation/calc_main.cpp
 	backend/split_string.cpp
+	backend/calculation/number.cpp
+	backend/calculation/calc_main.cpp
+	backend/calculation/compare.cpp
+	backend/calculation/addition.cpp
+	backend/calculation/subtraction.cpp
 )
 
 # target_include_directories(cpp_main PRIVATE

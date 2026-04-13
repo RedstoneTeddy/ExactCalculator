@@ -14,5 +14,5 @@ print("---- Calculations ----")
 
 calc: cpp_main.Calculator = cpp_main.Calculator(10)
 
-calculation: str = "3 + 5.0"
+calculation: str = "3 - 4"
 print(calc.Calculate_string(calculation))

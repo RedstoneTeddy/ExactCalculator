@@ -8,6 +8,7 @@
 #include "calculation/base_structures.hpp"
 #include "calculation/number.hpp"
 #include "calculation/addition.hpp"
+#include "calculation/subtraction.hpp"
 
 std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int maxSignificant);
 void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::string& currentPart, int maxSignificant);

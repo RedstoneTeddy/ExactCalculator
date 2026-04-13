@@ -1,9 +1,10 @@
 #ifndef CALC_MAIN_HPP
 #define CALC_MAIN_HPP
 
+#include "base_structures.hpp"
 #include "number.hpp"
 #include "addition.hpp"
-#include "base_structures.hpp"
+#include "subtraction.hpp"
 
 #include <vector>
 #include <memory>
