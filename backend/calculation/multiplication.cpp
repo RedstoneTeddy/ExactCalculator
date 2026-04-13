@@ -1,5 +1,6 @@
 #include "multiplication.hpp"
 #include "base_operation.hpp"
+#include "subtraction.hpp"
 #include "addition.hpp"
 
 #include "number.hpp"

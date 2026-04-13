@@ -6,7 +6,7 @@
 
 class Addition : public Operation {
 public:
-    Number Calculate(Number& a, Number& b) override;
+    Number Calculate(Number& a, Number& b, int shiftB = 0) override;
 };
 
 

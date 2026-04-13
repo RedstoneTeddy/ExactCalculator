@@ -7,6 +7,7 @@
 #include "addition.hpp"
 #include "subtraction.hpp"
 #include "multiplication.hpp"
+#include "division.hpp"
 
 
 Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& calculation_parts) {
@@ -66,15 +67,15 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                         i--; // Move back index to account for removed parts
                         
                     } 
-                    // else if (Subtraction* subtraction = dynamic_cast<Subtraction*>(part.get())) {
-                    //     Number result = subtraction->Calculate(*leftNum, *rightNum);
+                    else if (Division* division = dynamic_cast<Division*>(part.get())) {
+                        Number result = division->Calculate(*leftNum, *rightNum);
 
-                    //     // Replace left part with result, remove operator and right part
-                    //     leftPart = std::make_unique<Number>(result);
-                    //     calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
-                    //     calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
-                    //     i--; // Move back index to account for removed parts
-                    // }
+                        // Replace left part with result, remove operator and right part
+                        leftPart = std::make_unique<Number>(result);
+                        calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
+                        calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
+                        i--; // Move back index to account for removed parts
+                    }
 
                 }
             }

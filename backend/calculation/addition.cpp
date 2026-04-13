@@ -1,8 +1,10 @@
 #include "addition.hpp"
 #include "compare.hpp"
 
-Number Addition::Calculate(Number& a, Number& b) {
+Number Addition::Calculate(Number& a, Number& b, int shiftB) {
     Number result(a.GetMaxSignificant());
+
+    // the calculations can be incorrect with shiftB if: shifted_b > a
 
     // Copy a to result
 
@@ -20,7 +22,7 @@ Number Addition::Calculate(Number& a, Number& b) {
         // Add b to result
         for (int i = b.GetDigits().size() - 1; i >= 0; i--) {
             int digit = b.GetDigits().at(i);
-            int exponent = b.GetExponent() - i;
+            int exponent = b.GetExponent() - i + shiftB;
 
             // Adjust result to fit new digit
             int resultIndex = result.GetExponent() - exponent;
@@ -48,7 +50,7 @@ Number Addition::Calculate(Number& a, Number& b) {
         int i = 0;
         while (carry > 0) {
             i++;
-            int exponent = b.GetExponent() + i;
+            int exponent = b.GetExponent() + i + shiftB;
             int resultIndex = result.GetExponent() - exponent;
             if (resultIndex < 0) {
                 // Need to add leading zeros to result
@@ -92,7 +94,7 @@ Number Addition::Calculate(Number& a, Number& b) {
 
         for (int i = second.GetDigits().size() - 1; i >= 0; i--) {
             int digit = second.GetDigits().at(i);
-            int exponent = second.GetExponent() - i;
+            int exponent = second.GetExponent() - i + shiftB;
 
             // Adjust result to fit new digit
             int resultIndex = result.GetExponent() - exponent;
@@ -125,7 +127,7 @@ Number Addition::Calculate(Number& a, Number& b) {
         int i = 0;
         while (carry > 0) {
             i++;
-            int exponent = second.GetExponent() + i;
+            int exponent = second.GetExponent() + i + shiftB;
             int resultIndex = result.GetExponent() - exponent;
             if (resultIndex < 0) {
                 // Need to add leading zeros to result

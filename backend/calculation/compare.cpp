@@ -2,7 +2,7 @@
 
 #include "number.hpp"
 
-int CompareNumbers(Number& num1, Number& num2, bool ignoreSign) {
+int CompareNumbers(Number& num1, Number& num2, bool ignoreSign, int shiftSecond) {
     // If num1 > num2 returns  1
     // If num1 = num2 returns  0
     // If num1 < num2 returns -1
@@ -10,8 +10,10 @@ int CompareNumbers(Number& num1, Number& num2, bool ignoreSign) {
     num1.CorrectForSignificance();
     num2.CorrectForSignificance();
 
+    int second_exponent = num2.GetExponent() + shiftSecond;
+
     // Check for equality
-    if (num1.GetIsNegative() == num2.GetIsNegative() && num1.GetDigits() == num2.GetDigits() && num1.GetExponent() == num2.GetExponent()) {
+    if (num1.GetIsNegative() == num2.GetIsNegative() && num1.GetDigits() == num2.GetDigits() && num1.GetExponent() == second_exponent) {
         return 0;
     }
 
@@ -27,9 +29,9 @@ int CompareNumbers(Number& num1, Number& num2, bool ignoreSign) {
     
 
     // Check for exponent
-    if (num1.GetExponent() > num2.GetExponent()) {
+    if (num1.GetExponent() > second_exponent) {
         return num1.GetIsNegative() ? -1 : 1;
-    } else if (num1.GetExponent() < num2.GetExponent()) {
+    } else if (num1.GetExponent() < second_exponent) {
         return num1.GetIsNegative() ? 1 : -1;
     }
 

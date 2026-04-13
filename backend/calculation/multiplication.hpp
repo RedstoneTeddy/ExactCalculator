@@ -3,9 +3,10 @@
 
 #include "base_operation.hpp"
 #include "number.hpp"
+#include "subtraction.hpp"
 #include "addition.hpp"
 
-class Multiplication : public Addition {
+class Multiplication : public Subtraction {
 public:
     Number Calculate(Number& a, Number& b) override;
 };
