@@ -8,6 +8,7 @@
 #include "calculation/number.hpp"
 #include "calculation/addition.hpp"
 #include "calculation/subtraction.hpp"
+#include "calculation/multiplication.hpp"
 
 
 std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int maxSignificant) {
@@ -16,6 +17,7 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
     std::string currentPart = "";
 
     for (char c : input) {
+        // +, -, *
         if (c == '+') {
             HandleOperator(parts, currentPart, maxSignificant);
             parts.push_back(std::make_unique<Addition>());
@@ -24,7 +26,22 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
             HandleOperator(parts, currentPart, maxSignificant);
             parts.push_back(std::make_unique<Subtraction>());
         }
+        else if (c == '*') {
+            HandleOperator(parts, currentPart, maxSignificant);
+            parts.push_back(std::make_unique<Multiplication>());
+        }
 
+        // Brackets
+        else if (c == '(') {
+            HandleOperator(parts, currentPart, maxSignificant);
+            parts.push_back(std::make_unique<Bracket>(true));
+        }
+        else if (c == ')') {
+            HandleOperator(parts, currentPart, maxSignificant);
+            parts.push_back(std::make_unique<Bracket>(false));
+        }
+
+        // Else: Append to current part for number or a function name
         else {
             currentPart += c;
         }

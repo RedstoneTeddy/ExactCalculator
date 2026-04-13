@@ -11,6 +11,13 @@ public:
 };
 
 
+class Bracket : public CalculationPart {
+public:
+    bool isOpen; // true for '(', false for ')'
+    Bracket(bool isOpen) {this->isOpen = isOpen;}
+};
+
+
 
 
 #endif // BASE_STRUCTURES_HPP

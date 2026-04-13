@@ -2,6 +2,7 @@
 #define ADDITION_HPP
 
 #include "base_operation.hpp"
+#include "compare.hpp"
 
 class Addition : public Operation {
 public:

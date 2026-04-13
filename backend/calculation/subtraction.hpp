@@ -2,8 +2,9 @@
 #define SUBTRACTION_HPP
 
 #include "base_operation.hpp"
+#include "addition.hpp"
 
-class Subtraction : public Operation {
+class Subtraction : public Addition {
 public:
     Number Calculate(Number& a, Number& b) override;
 };

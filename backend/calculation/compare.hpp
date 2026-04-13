@@ -4,7 +4,7 @@
 #include <vector>
 #include "number.hpp"
 
-int CompareNumbers(Number& num1, Number& num2);
+int CompareNumbers(Number& num1, Number& num2, bool ignoreSign = false);
 // If num1 > num2 returns  1
 // If num1 = num2 returns  0
 // If num1 < num2 returns -1

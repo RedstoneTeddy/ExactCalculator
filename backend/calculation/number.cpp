@@ -66,7 +66,7 @@ void Number::SetFromString(std::string value) {
     exponent = 0;
 
     // Negative sign
-    if (!value.empty() && value.at(0) == '-') {
+    if (!value.empty() && value.at(0) == '_') {
         isNegative = true;
         value.erase(0, 1);
     }
@@ -180,5 +180,14 @@ std::string Number::GetAsString() {
 void Number::CorrectForSignificance() {
     if (digits.size() > maxSignificant) {
         SetDigits(digits);
+    }
+    // Remove leading zeros
+    while (digits.size() > 1 && digits.at(0) == 0) {
+        digits.erase(digits.begin());
+        exponent--;
+    }
+    // Remove trailing zeros
+    while (digits.size() > 1 && digits.at(digits.size() - 1) == 0) {
+        digits.pop_back();
     }
 }
