@@ -7,6 +7,7 @@
 #include "subtraction.hpp"
 #include "multiplication.hpp"   
 #include "division.hpp"
+#include "exponent.hpp"
 #include "variables.hpp"
 
 #include <vector>

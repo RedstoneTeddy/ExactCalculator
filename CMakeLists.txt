@@ -20,6 +20,7 @@ pybind11_add_module(cpp_main
 	backend/calculation/subtraction.cpp
 	backend/calculation/multiplication.cpp
 	backend/calculation/division.cpp
+	backend/calculation/exponent.cpp
 )
 
 # target_include_directories(cpp_main PRIVATE

@@ -14,6 +14,7 @@
 #include "calculation/subtraction.hpp"
 #include "calculation/multiplication.hpp"
 #include "calculation/division.hpp"
+#include "calculation/exponent.hpp"
 
 std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int maxSignificant);
 void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::string& currentPart, int maxSignificant);

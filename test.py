@@ -157,6 +157,59 @@ for i in range(1000):
 print(f"Division (1000x) test completed in {(end_time - start_time)*1000:.4f} ms.")
 
 
+print("---- Simple Exponentiation ----")
+# Prepare numbers
+a_list = []
+b_list = []
+result_list = []
+calculated_list = []
+calculation_list = []
+for _ in range(1000):
+    a_list.append(random.randrange(-100, 100))
+    if (a_list[-1] == 0):
+        a_list[-1] = 1
+    b_list.append(random.randrange(-10, 10))
+    result_list.append(a_list[-1] ** b_list[-1])
+    calculation_list.append(f"{str(a_list[-1]).replace('-', '_')} ^ {str(b_list[-1]).replace('-', '_')}")
+# Calculate and measure
+start_time = time.time()
+for i in range(1000):
+    calculated_list.append(calc.Calculate_double(calculation_list[i]))
+end_time = time.time()
+# Check results
+for i in range(1000):
+    if not math.isclose(result_list[i], calculated_list[i], rel_tol=tolerance):
+        print(f"Error: {calculation_list[i]} = {result_list[i]}, but got {calculated_list[i]}")
+print(f"Exponentiation (1000x) test completed in {(end_time - start_time)*1000:.4f} ms.")
+
+
+
+print("---- Advanced Exponentiation ----")
+# Prepare numbers
+a_list = []
+b_list = []
+result_list = []
+calculated_list = []
+calculation_list = []
+for _ in range(100):
+    a_list.append(random.randrange(1, 100))
+    b_list.append(random.randrange(-10, 10) + round(random.random(), 3))
+    result_list.append(a_list[-1] ** b_list[-1])
+    calculation_list.append(f"{str(a_list[-1]).replace('-', '_')} ^ {str(b_list[-1]).replace('-', '_')}")
+# Calculate and measure
+start_time = time.time()
+for i in range(100):
+    calculated_list.append(calc.Calculate_double(calculation_list[i]))
+end_time = time.time()
+# Check results
+for i in range(100):
+    if not math.isclose(result_list[i], calculated_list[i], rel_tol=tolerance):
+        print(f"Error: {calculation_list[i]} = {result_list[i]}, but got {calculated_list[i]}")
+print(f"Exponentiation (100x) test completed in {(end_time - start_time)*1000:.4f} ms.")
+
+
+
+
 
 
 
@@ -172,6 +225,7 @@ for _ in range(1000):
 # Calculate and measure
 start_time = time.time()
 for i in range(1000):
+    # print(calculation_list[i])
     calculated_list.append(calc.Calculate_double(calculation_list[i]))
 end_time = time.time()
 # Check results
@@ -179,6 +233,7 @@ for i in range(1000):
     if not math.isclose(result_list[i], calculated_list[i], rel_tol=tolerance):
         print(f"Error: {calculation_list[i]} = {result_list[i]}, but got {calculated_list[i]}")
 print(f"Complex calculations (1000x) test completed in {(end_time - start_time)*1000:.4f} ms.")
+
 
 print("\nAll tests completed.\n")
 

@@ -8,6 +8,19 @@ Number Addition::Calculate(Number& a, Number& b) {
 Number Addition::Calculate(Number& a, Number& b, int shiftB) {
     Number result(a.GetMaxSignificant());
 
+    a.CorrectForSignificance();
+    b.CorrectForSignificance();
+
+    bool aIsZero = a.GetDigits().size() == 1 && a.GetDigits()[0] == 0;
+    bool bIsZero = b.GetDigits().size() == 1 && b.GetDigits()[0] == 0;
+
+    if (aIsZero) {
+        return b;
+    }
+    if (bIsZero) {
+        return a;
+    }
+
     // the calculations can be incorrect with shiftB if: shifted_b > a
 
     // Copy a to result

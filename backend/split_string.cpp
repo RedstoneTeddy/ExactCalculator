@@ -12,6 +12,7 @@
 #include "calculation/subtraction.hpp"
 #include "calculation/multiplication.hpp"
 #include "calculation/division.hpp"
+#include "calculation/exponent.hpp"
 
 
 
@@ -49,6 +50,10 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
         else if (c == '/') {
             HandleOperator(parts, currentPart, maxSignificant);
             parts.push_back(std::make_unique<Division>());
+        }
+        else if (c == '^') {
+            HandleOperator(parts, currentPart, maxSignificant);
+            parts.push_back(std::make_unique<Exponent>());
         }
 
         // Brackets

@@ -9,6 +9,7 @@
 #include "subtraction.hpp"
 #include "multiplication.hpp"
 #include "division.hpp"
+#include "exponent.hpp"
 #include "variables.hpp"
 #include "equal_sign.hpp"
 #include "../functions/constants.hpp"
@@ -99,6 +100,32 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
 
 
+
+
+    // Handle ^
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        std::unique_ptr<CalculationPart>& part = calculation_parts[i];
+        if (Exponent* exponent = dynamic_cast<Exponent*>(part.get())) {
+            if (i != 0 && i != calculation_parts.size() - 1) {
+                std::unique_ptr<CalculationPart>& leftPart = calculation_parts[i - 1];
+                std::unique_ptr<CalculationPart>& rightPart = calculation_parts[i + 1];
+                if (Number* leftNum = dynamic_cast<Number*>(leftPart.get())) {
+                    if (Number* rightNum = dynamic_cast<Number*>(rightPart.get())) {
+                        Number result = exponent->Calculate(*leftNum, *rightNum);
+
+                        // Replace left part with result, remove operator and right part
+                        leftPart = std::make_unique<Number>(result);
+                        calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
+                        calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
+                        i--; // Move back index to account for removed parts
+                    }
+                }
+            }    
+        }
+    }
+
+
+    
 
     // Handle * and /
     for (int i = 0; i < calculation_parts.size(); i++) {
