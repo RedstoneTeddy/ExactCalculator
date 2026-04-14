@@ -1,6 +1,10 @@
 #include "addition.hpp"
 #include "compare.hpp"
 
+Number Addition::Calculate(Number& a, Number& b) {
+    return Calculate(a, b, 0);
+}
+
 Number Addition::Calculate(Number& a, Number& b, int shiftB) {
     Number result(a.GetMaxSignificant());
 
@@ -77,7 +81,7 @@ Number Addition::Calculate(Number& a, Number& b, int shiftB) {
         Number first(numNeg.GetMaxSignificant());
         Number second(numNeg.GetMaxSignificant());
 
-        if (CompareNumbers(numPos, numNeg, true) >= 0) {
+        if (CompareNumbers(numPos, numNeg, true, shiftB) >= 0) {
             first = numPos;
             second = numNeg;
             result.SetNegative(false);

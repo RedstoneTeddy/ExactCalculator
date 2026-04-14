@@ -8,7 +8,7 @@
 
 class Multiplication : public Subtraction {
 public:
-    Number Calculate(Number& a, Number& b) override;
+    Number Calculate(Number& a, Number& b);
 };
 
 

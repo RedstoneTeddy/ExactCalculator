@@ -12,7 +12,7 @@ print(cpp_main.TestNumber("123.456", 1))
 
 print("---- Calculations ----")
 
-calc: cpp_main.Calculator = cpp_main.Calculator(10)
+calc: cpp_main.Calculator = cpp_main.Calculator(100_000)
 
-calculation: str = "3 - 4"
+calculation: str = "(1.5 + 2.5) * 3.0 - 4.0 / 2.0"
 print(calc.Calculate_string(calculation))

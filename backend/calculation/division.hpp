@@ -8,7 +8,7 @@
 
 class Division : public Multiplication {
 public:
-    Number Calculate(Number& a, Number& b) override;
+    Number Calculate(Number& a, Number& b);
 };
 
 

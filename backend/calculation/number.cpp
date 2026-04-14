@@ -66,29 +66,58 @@ void Number::SetFromString(std::string value) {
     exponent = 0;
 
     // Negative sign
-    if (!value.empty() && value.at(0) == '_') {
+    if (!value.empty() && (value.at(0) == '_' || value.at(0) == '-')) {
         isNegative = true;
         value.erase(0, 1);
     }
 
-    // Read in the number
-    std::vector<int> newDigits;
-    bool exponentSet = false;
-    for (int i = 0; i < value.size(); i++) {
-        if (value.at(i) == '.') {
-            // Exponent equals count of digits before the decimal point minus 1.
-            if (!exponentSet) {
-                exponent = static_cast<int>(newDigits.size()) - 1;
-                exponentSet = true;
+    // Parse optional scientific exponent (e.g. 1.23e-4)
+    int scientificExponent = 0;
+    std::string mantissa = value;
+    std::size_t ePos = value.find_first_of("eE");
+    if (ePos != std::string::npos) {
+        mantissa = value.substr(0, ePos);
+        std::string exponentPart = value.substr(ePos + 1);
+
+        int sign = 1;
+        std::size_t expIndex = 0;
+        if (!exponentPart.empty() && (exponentPart.at(0) == '+' || exponentPart.at(0) == '-')) {
+            sign = exponentPart.at(0) == '-' ? -1 : 1;
+            expIndex = 1;
+        }
+
+        int parsedExponent = 0;
+        for (; expIndex < exponentPart.size(); expIndex++) {
+            char c = exponentPart.at(expIndex);
+            if (c >= '0' && c <= '9') {
+                parsedExponent = parsedExponent * 10 + (c - '0');
+            } else {
+                break;
             }
-        } else if (value.at(i) >= '0' && value.at(i) <= '9') {
-            newDigits.push_back(value.at(i) - '0');
+        }
+        scientificExponent = sign * parsedExponent;
+    }
+
+    // Read in mantissa digits and decimal point position.
+    std::vector<int> newDigits;
+    int digitsBeforeDecimal = 0;
+    bool decimalSeen = false;
+
+    for (int i = 0; i < mantissa.size(); i++) {
+        char c = mantissa.at(i);
+        if (c == '.') {
+            if (!decimalSeen) {
+                decimalSeen = true;
+            }
+        } else if (c >= '0' && c <= '9') {
+            newDigits.push_back(c - '0');
+            if (!decimalSeen) {
+                digitsBeforeDecimal++;
+            }
         }
     }
 
-    if (!exponentSet) {
-        exponent = static_cast<int>(newDigits.size()) - 1;
-    }
+    exponent = digitsBeforeDecimal - 1 + scientificExponent;
 
     if (newDigits.empty()) {
         newDigits.push_back(0);
@@ -96,6 +125,7 @@ void Number::SetFromString(std::string value) {
         isNegative = false;
     }
     SetDigits(newDigits);
+    CorrectForSignificance();
 }
 
 
@@ -189,5 +219,11 @@ void Number::CorrectForSignificance() {
     // Remove trailing zeros
     while (digits.size() > 1 && digits.at(digits.size() - 1) == 0) {
         digits.pop_back();
+    }
+
+    // If the number is zero, reset the exponent and sign
+    if (digits.size() == 1 && digits.at(0) == 0) {
+        exponent = 0;
+        isNegative = false;
     }
 }

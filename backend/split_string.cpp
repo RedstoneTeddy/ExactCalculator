@@ -18,6 +18,16 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
     std::string currentPart = "";
 
     for (char c : input) {
+        const bool isExponentSign =
+            (c == '+' || c == '-') &&
+            !currentPart.empty() &&
+            (currentPart.back() == 'e' || currentPart.back() == 'E');
+
+        if (isExponentSign) {
+            currentPart += c;
+            continue;
+        }
+
         // +, -, *
         if (c == '+') {
             HandleOperator(parts, currentPart, maxSignificant);

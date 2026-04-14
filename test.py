@@ -12,8 +12,8 @@ calculated: float
 calculation: str
 
 
-calc: cpp_main.Calculator = cpp_main.Calculator(10)
-tolerance: float = 1e-5
+calc: cpp_main.Calculator = cpp_main.Calculator(100)
+tolerance: float = 1e-7
 
 
 print("---- Addition ----")
