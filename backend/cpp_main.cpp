@@ -43,15 +43,18 @@ public:
 
 private:
     int maxSignificant;
+    Calc_main calc;
 
     Number Calculate_num(std::string input) {
         // Remove whitespace from input
+        py::gil_scoped_release release;
         input.erase(std::remove_if(input.begin(), input.end(), ::isspace), input.end());
         
         std::vector<std::unique_ptr<CalculationPart>> calculation_parts = SplitString(input, maxSignificant);
         
-        Calc_main calc;
-        return calc.Calculate_part(calculation_parts);
+        Number result = calc.Calculate_part(calculation_parts);
+        py::gil_scoped_acquire acquire;
+        return result;
     }
 };
 

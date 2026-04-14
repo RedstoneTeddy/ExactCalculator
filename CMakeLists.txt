@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(ExactCalculator LANGUAGES CXX)
+project(ExactCalculator)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,6 +13,8 @@ pybind11_add_module(cpp_main
 	backend/split_string.cpp
 	backend/calculation/number.cpp
 	backend/calculation/calc_main.cpp
+	backend/calculation/variables.cpp
+	backend/functions/constants.cpp
 	backend/calculation/compare.cpp
 	backend/calculation/addition.cpp
 	backend/calculation/subtraction.cpp
@@ -28,6 +30,21 @@ set_target_properties(cpp_main PROPERTIES
 	LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
+
+set(MSYS_UCRT_BIN "C:/msys64/ucrt64/bin")
+foreach(runtime_dll IN ITEMS
+	libgcc_s_seh-1.dll
+	libwinpthread-1.dll
+	libstdc++-6.dll
+)
+	if(EXISTS "${MSYS_UCRT_BIN}/${runtime_dll}")
+		add_custom_command(TARGET cpp_main POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different
+				"${MSYS_UCRT_BIN}/${runtime_dll}"
+				"$<TARGET_FILE_DIR:cpp_main>"
+		)
+	endif()
+endforeach()
 
 foreach(cfg IN ITEMS Debug Release RelWithDebInfo MinSizeRel)
 	string(TOUPPER "${cfg}" cfg_upper)

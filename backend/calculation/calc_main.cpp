@@ -4,13 +4,63 @@
 
 #include <memory>
 #include <utility>
+#include <iostream>
 #include "addition.hpp"
 #include "subtraction.hpp"
 #include "multiplication.hpp"
 #include "division.hpp"
+#include "variables.hpp"
+#include "equal_sign.hpp"
+#include "../functions/constants.hpp"
+
+
+Calc_main::Calc_main() {
+    // varNumbers and varNames are initialized as empty vectors by default
+}
 
 
 Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& calculation_parts) {
+
+    // Check for variable = num, and return immediately
+    if (calculation_parts.size() > 2) {
+        std::unique_ptr<CalculationPart>& firstPart = calculation_parts[0];
+        std::unique_ptr<CalculationPart>& secondPart = calculation_parts[1];
+        if (Variable* variable = dynamic_cast<Variable*>(firstPart.get())) {
+            if (EqualSign* equalSign = dynamic_cast<EqualSign*>(secondPart.get())) {
+
+                // Calculate value to store in the variable
+                std::vector<std::unique_ptr<CalculationPart>> subParts;
+                for (int j = 2; j < calculation_parts.size(); j++) {
+                    subParts.push_back(std::move(calculation_parts[j]));
+                }
+                // Recursively calculate the result of the sub-expression
+                Number subResult = Calculate_part(subParts);
+
+
+                // Store the result in the variable
+                SetVariable(variable->GetName(), subResult, &varNumbers, &varNames);
+                return subResult;
+            }
+        }
+    }
+
+
+
+    // Replace all variables & constants with their values
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        std::unique_ptr<CalculationPart>& part = calculation_parts[i];
+        if (Variable* variable = dynamic_cast<Variable*>(part.get())) {
+            variable->SetVectorPointers(&varNumbers, &varNames);
+            Number value = variable->GetValue();
+            value.CorrectForSignificance();
+            part = std::make_unique<Number>(value);
+        }
+        else if (Constant* constant = dynamic_cast<Constant*>(part.get())) {
+            Number value = constant->GetValue();
+            value.CorrectForSignificance();
+            part = std::make_unique<Number>(value);
+        }
+    }
 
 
     // Handle ( and )
@@ -27,6 +77,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
             } else {
                 nestedCounter--;
                 if (openBracket != -1 && nestedCounter == 0) {
+                    // Start a new thread and later check if all threads finished and returned their result, which will then get stored
                     std::vector<std::unique_ptr<CalculationPart>> subParts;
                     for (int j = openBracket + 1; j < i; j++) {
                         subParts.push_back(std::move(calculation_parts[j]));
@@ -43,6 +94,8 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
             }
         }
     }
+
+    //  check if all Bracket-threads finished and returned their result, which will then get stored
 
 
 

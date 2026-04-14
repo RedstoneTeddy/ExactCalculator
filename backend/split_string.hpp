@@ -7,6 +7,9 @@
 
 #include "calculation/base_structures.hpp"
 #include "calculation/number.hpp"
+#include "calculation/equal_sign.hpp"
+#include "calculation/variables.hpp"
+#include "functions/constants.hpp"
 #include "calculation/addition.hpp"
 #include "calculation/subtraction.hpp"
 #include "calculation/multiplication.hpp"
