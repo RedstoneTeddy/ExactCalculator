@@ -25,7 +25,7 @@ Number Division::Calculate(Number& a, Number& b) {
     
     // Do the division
     int resultDigit, shift;
-    int i_limit = std::max(result.GetMaxSignificant(), result.GetMaxSignificant() + 1);
+    int i_limit = result.GetMaxSignificant() + 1;
     for (int i = 0; i <= i_limit; i++) {
         shift = a.GetExponent() - b.GetExponent() - i;
         resultDigit = 0;
