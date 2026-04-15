@@ -103,6 +103,7 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
         }
         result = Division::Calculate(one, result);
     }
+    result = Round(result, rootSignificant-2);
     return result;
 }
 
@@ -236,4 +237,34 @@ Number SquareRoot(Number& number, int rootSignificant) {
     return current;
 }
 
+
+Number Round(Number& number, int significant) {
+    Number result(number.GetMaxSignificant());
+    if (number.GetDigits().size() <= static_cast<size_t>(significant)) {
+        result.SetNumber(number.GetIsNegative(), number.GetDigits(), number.GetExponent());
+        return result;
+    }
+
+    std::vector<int> roundedDigits(number.GetDigits().begin(), number.GetDigits().begin() + significant);
+    int nextDigit = number.GetDigits().at(significant);
+    if (nextDigit >= 5) {
+        // Round up
+        for (int i = significant - 1; i >= 0; i--) {
+            if (roundedDigits.at(i) < 9) {
+                roundedDigits.at(i)++;
+                break;
+            } else {
+                roundedDigits.at(i) = 0;
+            }
+        }
+        if (roundedDigits.at(0) == 0) {
+            // All digits were 9 and got rounded up to 0, so we need to add a new leading digit
+            roundedDigits.insert(roundedDigits.begin(), 1);
+        }
+    }
+
+    result.SetNumber(number.GetIsNegative(), roundedDigits, number.GetExponent());
+    result.CorrectForSignificance();
+    return result;
+}
 

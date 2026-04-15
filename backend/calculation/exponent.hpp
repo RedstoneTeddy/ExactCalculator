@@ -20,4 +20,6 @@ Number Average(Number& a, Number& b);
 
 Number SquareRoot(Number& number, int rootSignificant);
 
+Number Round(Number& number, int significant);
+
 #endif // EXPONENT_HPP

@@ -115,6 +115,12 @@ Number Addition::Calculate(Number& a, Number& b, int shiftB) {
 
             // Adjust result to fit new digit
             int resultIndex = result.GetExponent() - exponent;
+
+            // // Optimization
+            // if (resultIndex > a.GetMaxSignificant()+1 || resultIndex > b.GetMaxSignificant()+1) {
+            //     continue;
+            // }
+
             if (resultIndex < 0) {
                 // Need to add leading zeros to result
                 for (int j = 0; j < -resultIndex; j++) {
