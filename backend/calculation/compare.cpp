@@ -2,6 +2,8 @@
 
 #include "number.hpp"
 
+#include <algorithm>
+
 int CompareNumbers(Number& num1, Number& num2, bool ignoreSign, int shiftSecond) {
     // If num1 > num2 returns  1
     // If num1 = num2 returns  0
@@ -10,10 +12,17 @@ int CompareNumbers(Number& num1, Number& num2, bool ignoreSign, int shiftSecond)
     num1.CorrectForSignificance();
     num2.CorrectForSignificance();
 
-    int second_exponent = num2.GetExponent() + shiftSecond;
+    const std::vector<int>& digits1 = num1.GetDigits();
+    const std::vector<int>& digits2 = num2.GetDigits();
+    const int size1 = static_cast<int>(digits1.size());
+    const int size2 = static_cast<int>(digits2.size());
+    const int exponent1 = num1.GetExponent();
+    const int secondExponent = num2.GetExponent() + shiftSecond;
+    const bool num1Negative = num1.GetIsNegative();
+    const bool num2Negative = num2.GetIsNegative();
 
-    bool num1IsZero = num1.GetDigits().size() == 1 && num1.GetDigits()[0] == 0;
-    bool num2IsZero = num2.GetDigits().size() == 1 && num2.GetDigits()[0] == 0;
+    const bool num1IsZero = size1 == 1 && digits1[0] == 0;
+    const bool num2IsZero = size2 == 1 && digits2[0] == 0;
 
     // Zero has no meaningful exponent. Handle it explicitly before exponent-based ordering.
     if (num1IsZero && num2IsZero) {
@@ -23,60 +32,47 @@ int CompareNumbers(Number& num1, Number& num2, bool ignoreSign, int shiftSecond)
         if (ignoreSign) {
             return -1;
         }
-        return num2.GetIsNegative() ? 1 : -1;
+        return num2Negative ? 1 : -1;
     }
     if (num2IsZero) {
         if (ignoreSign) {
             return 1;
         }
-        return num1.GetIsNegative() ? -1 : 1;
-    }
-
-    // Check for equality (optionally ignoring sign)
-    bool signsEqual = num1.GetIsNegative() == num2.GetIsNegative();
-    if ((ignoreSign || signsEqual) && num1.GetDigits() == num2.GetDigits() && num1.GetExponent() == second_exponent) {
-        return 0;
+        return num1Negative ? -1 : 1;
     }
 
     // Negative number-combination to filter out
     if (!ignoreSign) {
-        if (num1.GetIsNegative() && !num2.GetIsNegative()) {
+        if (num1Negative && !num2Negative) {
             return -1;
         }
-        if (!num1.GetIsNegative() && num2.GetIsNegative()) {
+        if (!num1Negative && num2Negative) {
             return 1;
         }
     }
+
+    const bool signedCompareNegative = !ignoreSign && num1Negative;
+    const int greaterResult = signedCompareNegative ? -1 : 1;
+    const int smallerResult = signedCompareNegative ? 1 : -1;
     
 
     // Check for exponent
-    if (num1.GetExponent() > second_exponent) {
-        if (ignoreSign) {
-            return 1;
-        }
-        return num1.GetIsNegative() ? -1 : 1;
-    } else if (num1.GetExponent() < second_exponent) {
-        if (ignoreSign) {
-            return -1;
-        }
-        return num1.GetIsNegative() ? 1 : -1;
+    if (exponent1 > secondExponent) {
+        return greaterResult;
+    } else if (exponent1 < secondExponent) {
+        return smallerResult;
     }
 
     // Check for digits
-    for (int i = 0; i < std::max(num1.GetDigits().size(), num2.GetDigits().size()); i++) {
-        int digit1 = i < num1.GetDigits().size() ? num1.GetDigits().at(i) : 0;
-        int digit2 = i < num2.GetDigits().size() ? num2.GetDigits().at(i) : 0;
+    const int maxDigits = std::max(size1, size2);
+    for (int i = 0; i < maxDigits; i++) {
+        int digit1 = i < size1 ? digits1[i] : 0;
+        int digit2 = i < size2 ? digits2[i] : 0;
 
         if (digit1 > digit2) {
-            if (ignoreSign) {
-                return 1;
-            }
-            return num1.GetIsNegative() ? -1 : 1;
+            return greaterResult;
         } else if (digit1 < digit2) {
-            if (ignoreSign) {
-                return -1;
-            }
-            return num1.GetIsNegative() ? 1 : -1;
+            return smallerResult;
         }
     }
 

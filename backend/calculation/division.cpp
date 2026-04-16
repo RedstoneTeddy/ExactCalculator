@@ -4,7 +4,69 @@
 #include "multiplication.hpp"
 #include "compare.hpp"
 
+#include <algorithm>
 #include <vector>
+
+namespace {
+bool IsZeroFast(Number& number) {
+    return number.GetDigits().size() == 1 && number.GetDigits()[0] == 0;
+}
+
+int CompareShiftedNonNegative(Number& left, Number& right, int shiftRight) {
+    // Compares left with (right * 10^shiftRight), assuming both are non-negative and normalized.
+    if (IsZeroFast(left) && IsZeroFast(right)) {
+        return 0;
+    }
+    if (IsZeroFast(left)) {
+        return -1;
+    }
+    if (IsZeroFast(right)) {
+        return 1;
+    }
+
+    int rightExponent = right.GetExponent() + shiftRight;
+    if (left.GetExponent() > rightExponent) {
+        return 1;
+    }
+    if (left.GetExponent() < rightExponent) {
+        return -1;
+    }
+
+    int maxDigits = std::max(static_cast<int>(left.GetDigits().size()), static_cast<int>(right.GetDigits().size()));
+    for (int i = 0; i < maxDigits; i++) {
+        int leftDigit = i < static_cast<int>(left.GetDigits().size()) ? left.GetDigits()[i] : 0;
+        int rightDigit = i < static_cast<int>(right.GetDigits().size()) ? right.GetDigits()[i] : 0;
+
+        if (leftDigit > rightDigit) {
+            return 1;
+        }
+        if (leftDigit < rightDigit) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int FindQuotientDigit(Number& left, std::vector<Number>& divisors, int shift) {
+    int low = 1;
+    int high = 9;
+    int best = 0;
+
+    while (low <= high) {
+        int mid = (low + high) / 2;
+        int cmp = CompareShiftedNonNegative(left, divisors[mid - 1], shift);
+        if (cmp >= 0) {
+            best = mid;
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+
+    return best;
+}
+} // namespace
 
 
 Number Division::Calculate(Number& a, Number& b) {
@@ -17,6 +79,7 @@ Number Division::Calculate(Number& a, Number& b) {
     posB.SetNumber(false, b.GetDigits(), b.GetExponent());
 
     std::vector<Number> divisors;
+    divisors.reserve(9);
     divisors.push_back(posB);
     for (int i = 1; i < 9; i++) {
         Number nextDivisor = Addition::Calculate(divisors[i - 1], posB);
@@ -24,25 +87,20 @@ Number Division::Calculate(Number& a, Number& b) {
     }
     
     // Do the division
-    int resultDigit, shift;
     int i_limit = result.GetMaxSignificant() + 1;
-    for (int i = 0; i <= i_limit; i++) {
-        shift = a.GetExponent() - b.GetExponent() - i;
-        resultDigit = 0;
+    result.GetDigits().reserve(i_limit + 1);
+    int baseShift = a.GetExponent() - b.GetExponent();
 
-        for (int j = 8; j >= 0; j--) {
-            if (CompareNumbers(a_leftover, divisors[j], true, shift) >= 0) {
-                resultDigit = j + 1;
-                break;
-            }
-        }
+    for (int i = 0; i <= i_limit; i++) {
+        int shift = baseShift - i;
+        int resultDigit = FindQuotientDigit(a_leftover, divisors, shift);
 
         if (resultDigit > 0) {
             a_leftover = Subtraction::Calculate(a_leftover, divisors[resultDigit - 1], shift);
         }
         result.GetDigits().push_back(resultDigit);
 
-        if (a_leftover.GetDigits().size() == 1 && a_leftover.GetDigits()[0] == 0) {
+        if (IsZeroFast(a_leftover)) {
             break;
         }
 

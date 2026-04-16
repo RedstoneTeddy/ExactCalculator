@@ -155,6 +155,14 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
         int max_i = rootSignificant * 4;
         while (run) {
             current_divider = HalfNonNegative(current_divider);
+
+            // If divider is below b_leftover's representable subtraction granularity,
+            // additional iterations cannot change b_leftover at current precision.
+            int subtractionNoOpExponent = b_leftover.GetExponent() - b_leftover.GetMaxSignificant() - 1;
+            if (current_divider.GetExponent() < subtractionNoOpExponent) {
+                break;
+            }
+
             Number new_root = SquareRoot(current_root, rootSignificant);
 
             if (CompareNumbers(b_leftover, current_divider) >= 0) {
@@ -234,10 +242,11 @@ Number Average(Number& a, Number& b) {
     if (a.GetIsNegative() || b.GetIsNegative()) {
         Addition addition;
         Number sum = addition.Calculate(a, b);
-        Number two(a.GetMaxSignificant());
-        two.SetNumber(false, {2}, 0);
-        Division division;
-        result = division.Calculate(sum, two);
+        bool wasNegative = sum.GetIsNegative();
+        sum.SetNegative(false);
+
+        result = HalfNonNegative(sum);
+        result.SetNegative(wasNegative && !IsZeroFast(result));
         result.CorrectForSignificance();
         return result;
     }
