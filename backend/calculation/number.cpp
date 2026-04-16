@@ -1,5 +1,6 @@
 #include "number.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <string>
 
@@ -211,11 +212,32 @@ void Number::CorrectForSignificance() {
     if (digits.size() > maxSignificant) {
         SetDigits(digits);
     }
-    // Remove leading zeros
-    while (digits.size() > 1 && digits.at(0) == 0) {
-        digits.erase(digits.begin());
-        exponent--;
+
+    if (digits.empty()) {
+        digits = {0};
+        exponent = 0;
+        isNegative = false;
+        return;
     }
+
+    // Remove leading zeros in one erase to avoid repeated shifting.
+    std::size_t firstNonZero = 0;
+    while (firstNonZero < digits.size() && digits[firstNonZero] == 0) {
+        firstNonZero++;
+    }
+
+    if (firstNonZero >= digits.size()) {
+        digits = {0};
+        exponent = 0;
+        isNegative = false;
+        return;
+    }
+
+    if (firstNonZero > 0) {
+        digits.erase(digits.begin(), digits.begin() + static_cast<std::ptrdiff_t>(firstNonZero));
+        exponent -= static_cast<int>(firstNonZero);
+    }
+
     // Remove trailing zeros
     while (digits.size() > 1 && digits.at(digits.size() - 1) == 0) {
         digits.pop_back();

@@ -4,7 +4,89 @@
 #include "number.hpp"
 #include "compare.hpp"
 #include <algorithm>
+#include <limits>
 #include <vector>
+
+namespace {
+bool IsZeroFast(Number& number) {
+    return number.GetDigits().size() == 1 && number.GetDigits()[0] == 0;
+}
+
+bool IsOneFast(Number& number) {
+    return !number.GetIsNegative() && number.GetExponent() == 0 && number.GetDigits().size() == 1 && number.GetDigits()[0] == 1;
+}
+
+Number HalfNonNegative(Number& value) {
+    Number result(value.GetMaxSignificant());
+
+    std::vector<int> halvedDigits;
+    halvedDigits.reserve(value.GetMaxSignificant());
+
+    int remainder = 0;
+    for (int digit : value.GetDigits()) {
+        int current = remainder * 10 + digit;
+        halvedDigits.push_back(current / 2);
+        remainder = current % 2;
+    }
+
+    while (remainder != 0 && static_cast<int>(halvedDigits.size()) < value.GetMaxSignificant()) {
+        int current = remainder * 10;
+        halvedDigits.push_back(current / 2);
+        remainder = current % 2;
+    }
+
+    result.SetNumber(false, halvedDigits, value.GetExponent());
+    result.CorrectForSignificance();
+    return result;
+}
+
+bool TryGetNonNegativeInteger(Number& number, int& value) {
+    // Integer if the least-significant represented exponent is >= 0.
+    int bottomExponent = number.GetExponent() - static_cast<int>(number.GetDigits().size()) + 1;
+    if (bottomExponent < 0 || number.GetIsNegative()) {
+        return false;
+    }
+
+    long long parsed = 0;
+    for (int digit : number.GetDigits()) {
+        if (parsed > (std::numeric_limits<int>::max() - digit) / 10) {
+            return false;
+        }
+        parsed = parsed * 10 + digit;
+    }
+
+    for (int i = 0; i < bottomExponent; i++) {
+        if (parsed > std::numeric_limits<int>::max() / 10) {
+            return false;
+        }
+        parsed *= 10;
+    }
+
+    value = static_cast<int>(parsed);
+    return true;
+}
+
+Number PowerBySquaring(Number& base, int exponent) {
+    Number result(base.GetMaxSignificant());
+    result.SetNumber(false, {1}, 0);
+
+    Number factor(base.GetMaxSignificant());
+    factor.SetNumber(base.GetIsNegative(), base.GetDigits(), base.GetExponent());
+
+    Multiplication multiplication;
+    while (exponent > 0) {
+        if ((exponent & 1) != 0) {
+            result = multiplication.Calculate(result, factor);
+        }
+        exponent >>= 1;
+        if (exponent > 0) {
+            factor = multiplication.Calculate(factor, factor);
+        }
+    }
+
+    return result;
+}
+} // namespace
 
 Number Exponent::Calculate(Number& a, Number& b) {
     return Calculate(a, b, a.GetMaxSignificant()/2);
@@ -20,6 +102,19 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
     Number one(a.GetMaxSignificant());
     one.SetNumber(false, {1}, 0);
 
+    a.CorrectForSignificance();
+    b.CorrectForSignificance();
+
+    if (IsZeroFast(b)) {
+        return one;
+    }
+    if (IsOneFast(a)) {
+        return one;
+    }
+    if (IsZeroFast(a)) {
+        return Number(a.GetMaxSignificant());
+    }
+
     Number b_leftover(rootSignificant);
     b_leftover.SetNumber(false, b.GetDigits(), b.GetExponent());
     b_leftover.SetMaxSignificant(rootSignificant);
@@ -27,14 +122,20 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
 
 
     // Base exponent (before comma)
-    while (!NumberIsZero(b_leftover) && !NumberIsSmallerThanOne(b_leftover)) {
-        result = Multiplication::Calculate(result, a);
-        b_leftover = Subtraction::Calculate(b_leftover, one);
+    int integerExponent = 0;
+    if (TryGetNonNegativeInteger(b_leftover, integerExponent)) {
+        result = PowerBySquaring(a, integerExponent);
+        b_leftover.SetNumber(false, {0}, 0);
+    } else {
+        while (!IsZeroFast(b_leftover) && b_leftover.GetExponent() >= 0) {
+            result = Multiplication::Calculate(result, a);
+            b_leftover = Subtraction::Calculate(b_leftover, one);
+        }
     }
 
 
     // Root-exponent (after comma)
-    if (!NumberIsZero(b_leftover)) {
+    if (!IsZeroFast(b_leftover)) {
         if (a.GetIsNegative()) {
             return Number(a.GetMaxSignificant()); // Return 0 if trying to calculate root of negative number
         }
@@ -53,7 +154,7 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
         int i = 0;
         int max_i = rootSignificant * 4;
         while (run) {
-            current_divider = Average(current_divider, numZero);
+            current_divider = HalfNonNegative(current_divider);
             Number new_root = SquareRoot(current_root, rootSignificant);
 
             if (CompareNumbers(b_leftover, current_divider) >= 0) {
@@ -63,23 +164,18 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
 
             // Check if calculation is finished
             run = true;
-            b_leftover.CorrectForSignificance();
-            if (NumberIsZero(b_leftover)) {
+            if (IsZeroFast(b_leftover)) {
                 run = false;
             }
 
-            current_divider.CorrectForSignificance();
-            if (NumberIsZero(current_divider)) {
+            if (IsZeroFast(current_divider)) {
                 run = false;
             }
 
-            current_root.CorrectForSignificance();
-            new_root.CorrectForSignificance();
             if (CompareNumbers(new_root, current_root) == 0) {
                 run = false;
             }
-            current_root.SetDigits(new_root.GetDigits());
-            current_root.SetExponent(new_root.GetExponent());
+            current_root = new_root;
 
             i++;
             if (i > max_i) {
@@ -98,7 +194,7 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
 
     // Inverse of result if exponent is negative
     if (b.GetIsNegative()) {
-        if (NumberIsZero(result)) {
+        if (IsZeroFast(result)) {
             return Number(a.GetMaxSignificant()); // Return 0 if trying to calculate inverse of 0
         }
         result = Division::Calculate(one, result);
@@ -200,24 +296,21 @@ Number SquareRoot(Number& number, int rootSignificant) {
     if (number.GetIsNegative()) {
         return Number(number.GetMaxSignificant()); // Return 0 if trying to calculate square root of negative number
     }
-    if (NumberIsZero(number)) {
+    if (IsZeroFast(number)) {
         return Number(number.GetMaxSignificant()); // Return 0 if trying to calculate square root of 0
     }
 
     // Newton-Raphson: x_{k+1} = (x_k + number / x_k) / 2
     Number current(rootSignificant);
-    if (NumberIsSmallerThanOne(number)) {
-        current.SetNumber(false, {1}, 0);
-    } else {
-        current.SetNumber(false, number.GetDigits(), number.GetExponent());
-    }
+    int sqrtExponent = number.GetExponent() >= 0 ? number.GetExponent() / 2 : (number.GetExponent() - 1) / 2;
+    current.SetNumber(false, number.GetDigits(), sqrtExponent);
     current.CorrectForSignificance();
 
     Division division;
     int maxIterations = std::max(8, rootSignificant * 2 + 8);
 
     for (int i = 0; i < maxIterations; i++) {
-        if (NumberIsZero(current)) {
+        if (IsZeroFast(current)) {
             current.SetNumber(false, {1}, 0);
         }
 

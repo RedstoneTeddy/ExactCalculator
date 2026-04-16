@@ -1,6 +1,53 @@
 #include "addition.hpp"
 #include "compare.hpp"
 
+#include <algorithm>
+
+namespace {
+int DigitAtExponent(Number& num, int exponent) {
+    int index = num.GetExponent() - exponent;
+    if (index < 0 || index >= static_cast<int>(num.GetDigits().size())) {
+        return 0;
+    }
+    return num.GetDigits()[index];
+}
+
+Number AddPositiveFast(Number& a, Number& b) {
+    Number result(a.GetMaxSignificant());
+
+    int topExp = std::max(a.GetExponent(), b.GetExponent());
+    int aBottomExp = a.GetExponent() - static_cast<int>(a.GetDigits().size()) + 1;
+    int bBottomExp = b.GetExponent() - static_cast<int>(b.GetDigits().size()) + 1;
+    int bottomExp = std::min(aBottomExp, bBottomExp);
+
+    std::vector<int> sumDigitsLeastFirst;
+    sumDigitsLeastFirst.reserve(topExp - bottomExp + 2);
+
+    int carry = 0;
+    for (int exponent = bottomExp; exponent <= topExp; exponent++) {
+        int sum = DigitAtExponent(a, exponent) + DigitAtExponent(b, exponent) + carry;
+        sumDigitsLeastFirst.push_back(sum % 10);
+        carry = sum / 10;
+    }
+
+    int resultExponent = topExp;
+    if (carry > 0) {
+        sumDigitsLeastFirst.push_back(carry);
+        resultExponent++;
+    }
+
+    std::vector<int> resultDigits;
+    resultDigits.reserve(sumDigitsLeastFirst.size());
+    for (int i = static_cast<int>(sumDigitsLeastFirst.size()) - 1; i >= 0; i--) {
+        resultDigits.push_back(sumDigitsLeastFirst[i]);
+    }
+
+    result.SetNumber(false, resultDigits, resultExponent);
+    result.CorrectForSignificance();
+    return result;
+}
+} // namespace
+
 Number Addition::Calculate(Number& a, Number& b) {
     return Calculate(a, b, 0);
 }
@@ -19,6 +66,11 @@ Number Addition::Calculate(Number& a, Number& b, int shiftB) {
     }
     if (bIsZero) {
         return a;
+    }
+
+    // Hot path in exponent/division internals: positive numbers without shift.
+    if (shiftB == 0 && !a.GetIsNegative() && !b.GetIsNegative()) {
+        return AddPositiveFast(a, b);
     }
 
     // the calculations can be incorrect with shiftB if: shifted_b > a
