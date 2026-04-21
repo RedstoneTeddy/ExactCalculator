@@ -12,7 +12,10 @@
 #include "exponent.hpp"
 #include "variables.hpp"
 #include "equal_sign.hpp"
+
 #include "../functions/constants.hpp"
+#include "../functions/factorial.hpp"
+#include "../functions/root.hpp"
 
 
 Calc_main::Calc_main() {
@@ -62,6 +65,97 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
             part = std::make_unique<Number>(value);
         }
     }
+
+
+
+    // Handle functions: factorial
+    int openFunctionBracket = -1;
+    int nestedFunctionCounter = 0;
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        std::unique_ptr<CalculationPart>& part = calculation_parts[i];
+        if (Bracket* bracket = dynamic_cast<Bracket*>(part.get())) {
+            if (bracket->isFunctionBracket) {
+                if (bracket->isOpen) {
+                    if (nestedFunctionCounter == 0) {
+                        openFunctionBracket = i; // Mark the position of the open function bracket
+                    }   
+                    nestedFunctionCounter++;
+                } else {
+                    nestedFunctionCounter--;
+                    if (openFunctionBracket != -1 && nestedFunctionCounter == 0) {
+                        // Calculate the result of the inputs for the function
+                        std::vector<std::vector<std::unique_ptr<CalculationPart>>> subParts;
+                        int currentSubCalculationIndex = 0;
+                        subParts.push_back(std::vector<std::unique_ptr<CalculationPart>>());
+                        for (int j = openFunctionBracket + 1; j < i; j++) {
+                            std::unique_ptr<CalculationPart>& currentPart = calculation_parts[j];
+                            if (CommaSeparator* commaSeparator = dynamic_cast<CommaSeparator*>(currentPart.get())) {
+                                // Start a new sub-calculation for the next argument
+                                currentSubCalculationIndex++;
+                                subParts.push_back(std::vector<std::unique_ptr<CalculationPart>>());
+                            } else {
+                                // Add part to the current sub-calculation
+                                subParts[currentSubCalculationIndex].push_back(std::move(currentPart));
+                            }
+                        }
+                        
+                        std::vector<Number> functionArguments;
+                        for (std::vector<std::unique_ptr<CalculationPart>>& subPart : subParts) {
+                            Number argumentValue = Calculate_part(subPart);
+                            functionArguments.push_back(argumentValue);
+                        }
+
+                        // Check which function it is and calculate accordingly
+                        if (openFunctionBracket > 0) {
+                            std::unique_ptr<CalculationPart>& functionPart = calculation_parts[openFunctionBracket - 1];
+                            
+                            // Factorial
+                            if (Factorial* factorial = dynamic_cast<Factorial*>(functionPart.get())) {
+                                Number result = factorial->Calculate(functionArguments[0]);
+
+                                // Replace function part with result, remove brackets and inner parts
+                                functionPart = std::make_unique<Number>(result);
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                i -= 3; // Move back index to account for removed parts
+                            }
+
+                            // Square root
+                            else if (SquareRoot* squareRoot = dynamic_cast<SquareRoot*>(functionPart.get())) {
+                                Number result = squareRoot->Calculate(functionArguments[0]);
+
+                                // Replace function part with result, remove brackets and inner parts
+                                functionPart = std::make_unique<Number>(result);
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                i -= 3; // Move back index to account for removed parts
+                            }
+
+                            // n-th Root
+                            else if (Root* root = dynamic_cast<Root*>(functionPart.get())) {
+                                Number result = root->Calculate(functionArguments[0], functionArguments[1]);
+
+                                // Replace function part with result, remove brackets and inner parts
+                                functionPart = std::make_unique<Number>(result);
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                i -= 5; // Move back index to account for removed parts
+                            }
+                        }
+
+                        openFunctionBracket = -1; // Reset open function bracket index
+                    }
+                }
+            }
+        }
+    }
+
+
 
 
     // Handle ( and )

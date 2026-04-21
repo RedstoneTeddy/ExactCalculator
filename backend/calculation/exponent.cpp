@@ -89,7 +89,7 @@ Number PowerBySquaring(Number& base, int exponent) {
 } // namespace
 
 Number Exponent::Calculate(Number& a, Number& b) {
-    return Calculate(a, b, a.GetMaxSignificant()/2);
+    return Calculate(a, b, this->rootSignificant);
 }
 
 
@@ -98,6 +98,9 @@ Number Exponent::Calculate(Number& a, Number& b) {
 Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
     Number result(a.GetMaxSignificant());
     result.SetNumber(false, {1}, 0); // Start with 1
+
+    int finalSignificant = rootSignificant;
+    rootSignificant = int(rootSignificant * 1.1);
     
     Number one(a.GetMaxSignificant());
     one.SetNumber(false, {1}, 0);
@@ -163,7 +166,7 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
                 break;
             }
 
-            Number new_root = SquareRoot(current_root, rootSignificant);
+            Number new_root = Exp_SquareRoot(current_root, rootSignificant);
 
             if (CompareNumbers(b_leftover, current_divider) >= 0) {
                 result = Multiplication::Calculate(result, new_root);
@@ -207,31 +210,31 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
         }
         result = Division::Calculate(one, result);
     }
-    result = Round(result, rootSignificant-2);
+    result = Exp_Round(result, finalSignificant); // Round result to prevent precision issues from propagating further in the calculation
     return result;
 }
 
 
 
 
-bool NumberHasComma(Number& number) {
+bool Exp_NumberHasComma(Number& number) {
     number.CorrectForSignificance();
     return 0 > number.GetExponent() - number.GetDigits().size() + 1;
 }
 
-bool NumberIsZero(Number& number) {
+bool Exp_NumberIsZero(Number& number) {
     number.CorrectForSignificance();
     return number.GetDigits().size() == 1 && number.GetDigits()[0] == 0;
 }
 
-bool NumberIsSmallerThanOne(Number& number) {
+bool Exp_NumberIsSmallerThanOne(Number& number) {
     number.CorrectForSignificance();
     return number.GetExponent() < 0;
 }
 
 
 
-Number Average(Number& a, Number& b) {
+Number Exp_Average(Number& a, Number& b) {
     Number result(a.GetMaxSignificant());
 
     a.CorrectForSignificance();
@@ -301,7 +304,7 @@ Number Average(Number& a, Number& b) {
 }
 
 
-Number SquareRoot(Number& number, int rootSignificant) {
+Number Exp_SquareRoot(Number& number, int rootSignificant) {
     if (number.GetIsNegative()) {
         return Number(number.GetMaxSignificant()); // Return 0 if trying to calculate square root of negative number
     }
@@ -324,7 +327,7 @@ Number SquareRoot(Number& number, int rootSignificant) {
         }
 
         Number quotient = division.Calculate(number, current);
-        Number next = Average(current, quotient);
+        Number next = Exp_Average(current, quotient);
 
         // Converged at current precision.
         if (CompareNumbers(next, current) == 0) {
@@ -340,7 +343,7 @@ Number SquareRoot(Number& number, int rootSignificant) {
 }
 
 
-Number Round(Number& number, int significant) {
+Number Exp_Round(Number& number, int significant) {
     Number result(number.GetMaxSignificant());
     if (number.GetDigits().size() <= static_cast<size_t>(significant)) {
         result.SetNumber(number.GetIsNegative(), number.GetDigits(), number.GetExponent());

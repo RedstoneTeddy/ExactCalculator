@@ -14,7 +14,17 @@ public:
 class Bracket : public CalculationPart {
 public:
     bool isOpen; // true for '(', false for ')'
-    Bracket(bool isOpen) {this->isOpen = isOpen;}
+    bool isFunctionBracket;
+    Bracket(bool isOpen, bool isFunctionBracket) {
+        this->isOpen = isOpen;
+        this->isFunctionBracket = isFunctionBracket;
+    }
+
+};
+
+class CommaSeparator : public CalculationPart {
+public:    
+    CommaSeparator() = default;
 };
 
 

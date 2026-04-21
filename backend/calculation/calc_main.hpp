@@ -1,18 +1,19 @@
 #ifndef CALC_MAIN_HPP
 #define CALC_MAIN_HPP
 
-#include "base_structures.hpp"
-#include "number.hpp"
+#include <memory>
+#include <utility>
+#include <iostream>
 #include "addition.hpp"
 #include "subtraction.hpp"
-#include "multiplication.hpp"   
+#include "multiplication.hpp"
 #include "division.hpp"
 #include "exponent.hpp"
 #include "variables.hpp"
+#include "equal_sign.hpp"
 
-#include <vector>
-#include <utility>
-#include <memory>
+#include "../functions/constants.hpp"
+#include "../functions/factorial.hpp"
 
 
 class Calc_main {

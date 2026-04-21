@@ -8,6 +8,11 @@
 #include "calculation/number.hpp"
 #include "calculation/equal_sign.hpp"
 #include "calculation/variables.hpp"
+
+#include "functions/constants.hpp"
+#include "functions/factorial.hpp"
+#include "functions/root.hpp"
+
 #include "calculation/addition.hpp"
 #include "calculation/subtraction.hpp"
 #include "calculation/multiplication.hpp"
@@ -16,7 +21,7 @@
 
 
 
-std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int maxSignificant) {
+std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int maxSignificant, int rootSignificant) {
     std::vector<std::unique_ptr<CalculationPart>> parts;
 
     std::string currentPart = "";
@@ -36,40 +41,56 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
 
         // +, -, *
         if (c == '+') {
-            HandleOperator(parts, currentPart, maxSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
             parts.push_back(std::make_unique<Addition>());
         }
         else if (c == '-') {
-            HandleOperator(parts, currentPart, maxSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
             parts.push_back(std::make_unique<Subtraction>());
         }
         else if (c == '*') {
-            HandleOperator(parts, currentPart, maxSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
             parts.push_back(std::make_unique<Multiplication>());
         }
         else if (c == '/') {
-            HandleOperator(parts, currentPart, maxSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
             parts.push_back(std::make_unique<Division>());
         }
         else if (c == '^') {
-            HandleOperator(parts, currentPart, maxSignificant);
-            parts.push_back(std::make_unique<Exponent>());
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<Exponent>(rootSignificant));
         }
+
+
 
         // Brackets
         else if (c == '(') {
-            HandleOperator(parts, currentPart, maxSignificant);
-            parts.push_back(std::make_unique<Bracket>(true));
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<Bracket>(true, false));
         }
         else if (c == ')') {
-            HandleOperator(parts, currentPart, maxSignificant);
-            parts.push_back(std::make_unique<Bracket>(false));
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<Bracket>(false, false));
+        }
+        else if (c == '{') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<Bracket>(true, true));
+        }
+        else if (c == '}') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<Bracket>(false, true));
         }
 
         else if (c == '=') {
-            HandleOperator(parts, currentPart, maxSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
             parts.push_back(std::make_unique<EqualSign>());
         }
+        else if (c == ',') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<CommaSeparator>());
+        }
+
+
 
         // Else: Append to current part for number or a function name
         else {
@@ -77,12 +98,12 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
         }
     }
 
-    HandleOperator(parts, currentPart, maxSignificant);
+    HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
 
     return parts;
 }
 
-void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::string& currentPart, int maxSignificant) {
+void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::string& currentPart, int maxSignificant, int rootSignificant) {
     if (currentPart.empty()) {
         return;
     }
@@ -95,6 +116,24 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
         if (currentPart == "Pi" || currentPart == "E" || currentPart == "G" || currentPart == "C" || currentPart == "U") {
             Constant constant(currentPart, maxSignificant);
             parts.push_back(std::make_unique<Constant>(constant));
+        }
+
+        // Factorial
+        else if (currentPart == "Fac" || currentPart == "Factorial") {
+            Factorial factorial;
+            parts.push_back(std::make_unique<Factorial>(factorial));
+        }
+
+        // Square root
+        else if (currentPart == "Sqrt") {
+            SquareRoot r;
+            parts.push_back(std::make_unique<SquareRoot>(r));
+        }
+
+        // n-th Root
+        else if (currentPart == "Root") {
+            Root r;
+            parts.push_back(std::make_unique<Root>(r));
         }
 
         // Treat unknown functions as variables, so they can be defined by the user

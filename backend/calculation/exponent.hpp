@@ -8,18 +8,23 @@
 
 class Exponent : public Division{
 public:
+    int rootSignificant;
+    Exponent(int rootSignificant) {
+        this->rootSignificant = rootSignificant;
+    }
     Number Calculate(Number& a, Number& b) override;
     Number Calculate(Number& a, Number& b, int rootSignificant);
 };
 
-bool NumberHasComma(Number& number);
-bool NumberIsSmallerThanOne(Number& number);
-bool NumberIsZero(Number& number);
+bool Exp_NumberHasComma(Number& number);
+bool Exp_NumberIsSmallerThanOne(Number& number);
+bool Exp_NumberIsZero(Number& number);
 
-Number Average(Number& a, Number& b);
 
-Number SquareRoot(Number& number, int rootSignificant);
+Number Exp_Average(Number& a, Number& b);
 
-Number Round(Number& number, int significant);
+Number Exp_SquareRoot(Number& number, int rootSignificant);
+
+Number Exp_Round(Number& number, int significant);
 
 #endif // EXPONENT_HPP

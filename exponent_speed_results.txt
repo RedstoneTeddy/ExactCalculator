@@ -1,3 +1,0 @@
-First algorithm for exponentiation:
-Fixed Exponentiation Speed Test:
-

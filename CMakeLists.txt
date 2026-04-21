@@ -14,7 +14,11 @@ pybind11_add_module(cpp_main
 	backend/calculation/number.cpp
 	backend/calculation/calc_main.cpp
 	backend/calculation/variables.cpp
+
 	backend/functions/constants.cpp
+	backend/functions/factorial.cpp
+	backend/functions/root.cpp
+
 	backend/calculation/compare.cpp
 	backend/calculation/addition.cpp
 	backend/calculation/subtraction.cpp

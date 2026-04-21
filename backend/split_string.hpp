@@ -16,8 +16,8 @@
 #include "calculation/division.hpp"
 #include "calculation/exponent.hpp"
 
-std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int maxSignificant);
-void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::string& currentPart, int maxSignificant);
+std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int maxSignificant, int rootSignificant);
+void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::string& currentPart, int maxSignificant, int rootSignificant);
 
 
 #endif // SPLIT_STRING_HPP
