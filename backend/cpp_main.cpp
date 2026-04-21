@@ -10,6 +10,8 @@
 
 #include "calculation/exponent.hpp"
 
+#include "CalculationError.hpp"
+
 namespace py = pybind11;
 
 
@@ -63,11 +65,11 @@ public:
         LastResult = Calculate_num(input);
     }
 
-    double Calculate_double(std::string input) {
+    double Calculate_double() {
         return LastResult.GetAsDouble();
     }
 
-    std::string Calculate_string(std::string input) {
+    std::string Calculate_string() {
         return LastResult.GetAsString();
     }
 
@@ -88,12 +90,37 @@ private:
         // Remove whitespace from input
         py::gil_scoped_release release;
         input.erase(std::remove_if(input.begin(), input.end(), ::isspace), input.end());
-        
-        std::vector<std::unique_ptr<CalculationPart>> calculation_parts = SplitString(input, maxSignificant, rootSignificant);
-        
-        Number result = calc.Calculate_part(calculation_parts);
 
-        result = Exp_Round(result, finalSignificant);
+        Number result(maxSignificant);
+        
+        try {
+            std::vector<std::unique_ptr<CalculationPart>> calculation_parts = SplitString(input, maxSignificant, rootSignificant);
+            
+            result = calc.Calculate_part(calculation_parts);
+
+            result = Exp_Round(result, finalSignificant);
+        }
+        catch (const CalculationError& e) {
+            std::string errorTypeStr;
+            switch (e.getErrorType()) {
+                case ErrorType::SyntaxError:
+                    errorTypeStr = "Syntax Error";
+                    break;
+                case ErrorType::DivisionByZero:
+                    errorTypeStr = "Division by Zero";
+                    break;
+                case ErrorType::VariableNotDefined:
+                    errorTypeStr = "Variable Not Defined";
+                    break;
+                case ErrorType::DomainError:
+                    errorTypeStr = "Domain Error";
+                    break;
+                default:
+                    errorTypeStr = "Unknown Error";
+            }
+            LastError = errorTypeStr + ": " + e.what();
+            return Number(maxSignificant);
+        }
 
         py::gil_scoped_acquire acquire;
         return result;
@@ -113,6 +140,8 @@ PYBIND11_MODULE(cpp_main, handle) {
     .def_property("Significance", &Calculator::GetMaxSignificant, &Calculator::SetMaxSignificant)
     .def_property("FinalSignificance", &Calculator::GetFinalSignificant, &Calculator::SetFinalSignificant)
     .def_property("RootSignificance", &Calculator::GetRootSignificant, &Calculator::SetRootSignificant)
+    .def("Calculate", &Calculator::Calculate)
+    .def("Get_last_error", &Calculator::GetLastError)
     .def("Calculate_double", &Calculator::Calculate_double)
     .def("Calculate_string", &Calculator::Calculate_string);
 }

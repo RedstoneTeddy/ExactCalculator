@@ -3,12 +3,20 @@
 #include "../calculation/base_structures.hpp"
 #include "../calculation/multiplication.hpp"
 #include "../calculation/compare.hpp"
+#include "../CalculationError.hpp"
 
 #include <iostream>
 
 Number Factorial::Calculate(Number input) {
+    input.CorrectForSignificance();
+
     if (input.GetIsNegative()) {
-        return Number(0);
+        throw CalculationError("Factorial is only defined for non-negative integers.", ErrorType::DomainError);
+    }
+
+    int bottomExponent = input.GetExponent() - static_cast<int>(input.GetDigits().size()) + 1;
+    if (bottomExponent < 0) {
+        throw CalculationError("Factorial is only defined for whole numbers.", ErrorType::DomainError);
     }
 
 

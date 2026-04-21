@@ -5,6 +5,7 @@
 #include "../calculation/multiplication.hpp"
 #include "../calculation/division.hpp"
 #include "../calculation/compare.hpp"
+#include "../CalculationError.hpp"
 
 #include <algorithm>
 #include <string>
@@ -61,7 +62,7 @@ Number Logarithm::Calculate(Number base, Number input) {
 
     // Domain checks for real logarithm.
     if (IsLessOrEqual(input, zero) || IsLessOrEqual(base, zero) || CompareNumbers(base, one) == 0) {
-        return MakeZero(finalSignificant);
+        throw CalculationError("Logarithms require a positive input, a positive base, and the base cannot be 1.", ErrorType::DomainError);
     }
 
     NaturalLogarithm naturalLog;
@@ -69,7 +70,7 @@ Number Logarithm::Calculate(Number base, Number input) {
     Number lnBase = naturalLog.Calculate(base);
 
     if (IsZeroFast(lnBase)) {
-        return MakeZero(finalSignificant);
+        throw CalculationError("The logarithm base produces a zero denominator, so the result is undefined.", ErrorType::DomainError);
     }
 
     Division division;
@@ -89,7 +90,7 @@ Number NaturalLogarithm::Calculate(Number input) {
     Number one = MakeOne(workingSignificant);
 
     if (IsLessOrEqual(x, zero)) {
-        return MakeZero(finalSignificant);
+        throw CalculationError("The natural logarithm is only defined for positive inputs.", ErrorType::DomainError);
     }
     if (CompareNumbers(x, one) == 0) {
         return MakeZero(finalSignificant);

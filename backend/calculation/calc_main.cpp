@@ -18,6 +18,7 @@
 #include "../functions/root.hpp"
 #include "../functions/trigonometric.hpp"
 #include "../functions/logarithmic.hpp"
+#include "../CalculationError.hpp"
 
 
 Calc_main::Calc_main() {
@@ -26,6 +27,9 @@ Calc_main::Calc_main() {
 
 
 Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& calculation_parts) {
+    if (calculation_parts.empty()) {
+        throw CalculationError("The expression is empty.", ErrorType::SyntaxError);
+    }
 
     // Check for variable = num, and return immediately
     if (calculation_parts.size() > 2) {
@@ -73,6 +77,13 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
     // Handle functions: factorial
     int openFunctionBracket = -1;
     int nestedFunctionCounter = 0;
+
+    auto requireArgumentCount = [](const std::vector<Number>& args, std::size_t expected, const std::string& functionName) {
+        if (args.size() != expected) {
+            throw CalculationError("Function '" + functionName + "' requires exactly " + std::to_string(expected) + " argument(s).", ErrorType::SyntaxError);
+        }
+    };
+
     for (int i = 0; i < calculation_parts.size(); i++) {
         std::unique_ptr<CalculationPart>& part = calculation_parts[i];
         if (Bracket* bracket = dynamic_cast<Bracket*>(part.get())) {
@@ -84,6 +95,10 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                     nestedFunctionCounter++;
                 } else {
                     nestedFunctionCounter--;
+                    if (nestedFunctionCounter < 0) {
+                        throw CalculationError("Found a closing function bracket without a matching opening bracket.", ErrorType::SyntaxError);
+                    }
+
                     if (openFunctionBracket != -1 && nestedFunctionCounter == 0) {
                         // Calculate the result of the inputs for the function
                         std::vector<std::vector<std::unique_ptr<CalculationPart>>> subParts;
@@ -113,6 +128,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                             
                             // Factorial
                             if (Factorial* factorial = dynamic_cast<Factorial*>(functionPart.get())) {
+                                requireArgumentCount(functionArguments, 1, "Factorial");
                                 Number result = factorial->Calculate(functionArguments[0]);
 
                                 // Replace function part with result, remove brackets and inner parts
@@ -125,6 +141,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
                             // Square root
                             else if (SquareRoot* squareRoot = dynamic_cast<SquareRoot*>(functionPart.get())) {
+                                requireArgumentCount(functionArguments, 1, "Sqrt");
                                 Number result = squareRoot->Calculate(functionArguments[0]);
 
                                 // Replace function part with result, remove brackets and inner parts
@@ -137,6 +154,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
                             // Sine
                             else if (Sine* sine = dynamic_cast<Sine*>(functionPart.get())) {
+                                requireArgumentCount(functionArguments, 1, "Sin");
                                 Number result = sine->Calculate(functionArguments[0]);
 
                                 // Replace function part with result, remove brackets and inner parts
@@ -149,6 +167,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
                             // Cosine
                             else if (Cosine* cosine = dynamic_cast<Cosine*>(functionPart.get())) {
+                                requireArgumentCount(functionArguments, 1, "Cos");
                                 Number result = cosine->Calculate(functionArguments[0]);
 
                                 // Replace function part with result, remove brackets and inner parts
@@ -161,6 +180,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
                             // Tangent
                             else if (Tangent* tangent = dynamic_cast<Tangent*>(functionPart.get())) {
+                                requireArgumentCount(functionArguments, 1, "Tan");
                                 Number result = tangent->Calculate(functionArguments[0]);
 
                                 // Replace function part with result, remove brackets and inner parts
@@ -173,6 +193,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
                             // Arc sine
                             else if (ArcSine* arcSine = dynamic_cast<ArcSine*>(functionPart.get())) {
+                                requireArgumentCount(functionArguments, 1, "Asin");
                                 Number result = arcSine->Calculate(functionArguments[0]);
 
                                 functionPart = std::make_unique<Number>(result);
@@ -184,6 +205,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
                             // Arc cosine
                             else if (ArcCosine* arcCosine = dynamic_cast<ArcCosine*>(functionPart.get())) {
+                                requireArgumentCount(functionArguments, 1, "Acos");
                                 Number result = arcCosine->Calculate(functionArguments[0]);
 
                                 functionPart = std::make_unique<Number>(result);
@@ -195,6 +217,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
                             // Arc tangent
                             else if (ArcTangent* arcTangent = dynamic_cast<ArcTangent*>(functionPart.get())) {
+                                requireArgumentCount(functionArguments, 1, "Atan");
                                 Number result = arcTangent->Calculate(functionArguments[0]);
 
                                 functionPart = std::make_unique<Number>(result);
@@ -206,6 +229,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
                             // Natural logarithm
                             else if (NaturalLogarithm* naturalLogarithm = dynamic_cast<NaturalLogarithm*>(functionPart.get())) {
+                                requireArgumentCount(functionArguments, 1, "Ln");
                                 Number result = naturalLogarithm->Calculate(functionArguments[0]);
 
                                 functionPart = std::make_unique<Number>(result);
@@ -217,6 +241,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
                             // Logarithm with base
                             else if (Logarithm* logarithm = dynamic_cast<Logarithm*>(functionPart.get())) {
+                                requireArgumentCount(functionArguments, 2, "Log");
                                 Number result = logarithm->Calculate(functionArguments[0], functionArguments[1]);
 
                                 functionPart = std::make_unique<Number>(result);
@@ -230,6 +255,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
                             // n-th Root
                             else if (Root* root = dynamic_cast<Root*>(functionPart.get())) {
+                                requireArgumentCount(functionArguments, 2, "Root");
                                 Number result = root->Calculate(functionArguments[0], functionArguments[1]);
 
                                 // Replace function part with result, remove brackets and inner parts
@@ -241,6 +267,11 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                                 calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
                                 i -= 5; // Move back index to account for removed parts
                             }
+                            else {
+                                throw CalculationError("Function brackets must follow a valid function name.", ErrorType::SyntaxError);
+                            }
+                        } else {
+                            throw CalculationError("Function brackets must follow a valid function name.", ErrorType::SyntaxError);
                         }
 
                         openFunctionBracket = -1; // Reset open function bracket index
@@ -248,6 +279,10 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                 }
             }
         }
+    }
+
+    if (nestedFunctionCounter != 0) {
+        throw CalculationError("A function call is missing a closing bracket.", ErrorType::SyntaxError);
     }
 
 
@@ -266,6 +301,10 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                 nestedCounter++;
             } else {
                 nestedCounter--;
+                if (nestedCounter < 0) {
+                    throw CalculationError("Found a closing bracket without a matching opening bracket.", ErrorType::SyntaxError);
+                }
+
                 if (openBracket != -1 && nestedCounter == 0) {
                     // Start a new thread and later check if all threads finished and returned their result, which will then get stored
                     std::vector<std::unique_ptr<CalculationPart>> subParts;
@@ -285,6 +324,10 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
         }
     }
 
+    if (nestedCounter != 0) {
+        throw CalculationError("A bracketed expression is missing a closing bracket.", ErrorType::SyntaxError);
+    }
+
     //  check if all Bracket-threads finished and returned their result, which will then get stored
 
 
@@ -295,21 +338,33 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
     for (int i = 0; i < calculation_parts.size(); i++) {
         std::unique_ptr<CalculationPart>& part = calculation_parts[i];
         if (Exponent* exponent = dynamic_cast<Exponent*>(part.get())) {
-            if (i != 0 && i != calculation_parts.size() - 1) {
-                std::unique_ptr<CalculationPart>& leftPart = calculation_parts[i - 1];
-                std::unique_ptr<CalculationPart>& rightPart = calculation_parts[i + 1];
-                if (Number* leftNum = dynamic_cast<Number*>(leftPart.get())) {
-                    if (Number* rightNum = dynamic_cast<Number*>(rightPart.get())) {
-                        Number result = exponent->Calculate(*leftNum, *rightNum);
+            if (i == 0 || i == calculation_parts.size() - 1) {
+                throw CalculationError("The exponentiation operator (^) cannot appear at the beginning or end of an expression.", ErrorType::SyntaxError);
+            }
+            std::unique_ptr<CalculationPart>& leftPart = calculation_parts[i - 1];
+            std::unique_ptr<CalculationPart>& rightPart = calculation_parts[i + 1];
+            if (Number* leftNum = dynamic_cast<Number*>(leftPart.get())) {
+                if (Number* rightNum = dynamic_cast<Number*>(rightPart.get())) {
+                    Number result = exponent->Calculate(*leftNum, *rightNum);
 
-                        // Replace left part with result, remove operator and right part
-                        leftPart = std::make_unique<Number>(result);
-                        calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
-                        calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
-                        i--; // Move back index to account for removed parts
-                    }
+                    // Replace left part with result, remove operator and right part
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
+                    calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
+                    i--; // Move back index to account for removed parts
+                } else {
+                    throw CalculationError("The right operand of the exponentiation operator (^) must be a number.", ErrorType::SyntaxError);
                 }
-            }    
+            } else {
+                throw CalculationError("The left operand of the exponentiation operator (^) must be a number.", ErrorType::SyntaxError);
+            }
+        }
+    }
+
+    // Check for any remaining exponent operators that couldn't be reduced
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        if (dynamic_cast<Exponent*>(calculation_parts[i].get())) {
+            throw CalculationError("The exponentiation operator (^) could not be evaluated. Check that both operands are valid numbers.", ErrorType::SyntaxError);
         }
     }
 
@@ -320,35 +375,61 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
     for (int i = 0; i < calculation_parts.size(); i++) {
         std::unique_ptr<CalculationPart>& part = calculation_parts[i];
 
-        if (i != 0 && i != calculation_parts.size() - 1) {
-            std::unique_ptr<CalculationPart>& leftPart = calculation_parts[i - 1];
-            std::unique_ptr<CalculationPart>& rightPart = calculation_parts[i + 1];
-            if (Number* leftNum = dynamic_cast<Number*>(leftPart.get())) {
-                if (Number* rightNum = dynamic_cast<Number*>(rightPart.get())) {
+        if (i == 0 || i == calculation_parts.size() - 1) {
+            if (dynamic_cast<Multiplication*>(part.get()) || dynamic_cast<Division*>(part.get())) {
+                throw CalculationError("Multiplication and division operators cannot appear at the beginning or end of an expression.", ErrorType::SyntaxError);
+            }
+            continue;
+        }
 
-                    if (Multiplication* multiplication = dynamic_cast<Multiplication*>(part.get())) {
-                        Number result = multiplication->Calculate(*leftNum, *rightNum);
+        std::unique_ptr<CalculationPart>& leftPart = calculation_parts[i - 1];
+        std::unique_ptr<CalculationPart>& rightPart = calculation_parts[i + 1];
+        if (Number* leftNum = dynamic_cast<Number*>(leftPart.get())) {
+            if (Number* rightNum = dynamic_cast<Number*>(rightPart.get())) {
 
-                        // Replace left part with result, remove operator and right part
-                        leftPart = std::make_unique<Number>(result);
-                        calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
-                        calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
-                        i--; // Move back index to account for removed parts
-                        
-                    } 
-                    else if (Division* division = dynamic_cast<Division*>(part.get())) {
-                        Number result = division->Calculate(*leftNum, *rightNum);
+                if (Multiplication* multiplication = dynamic_cast<Multiplication*>(part.get())) {
+                    Number result = multiplication->Calculate(*leftNum, *rightNum);
 
-                        // Replace left part with result, remove operator and right part
-                        leftPart = std::make_unique<Number>(result);
-                        calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
-                        calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
-                        i--; // Move back index to account for removed parts
-                    }
+                    // Replace left part with result, remove operator and right part
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
+                    calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
+                    i--; // Move back index to account for removed parts
+                    
+                } 
+                else if (Division* division = dynamic_cast<Division*>(part.get())) {
+                    Number result = division->Calculate(*leftNum, *rightNum);
 
+                    // Replace left part with result, remove operator and right part
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
+                    calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
+                    i--; // Move back index to account for removed parts
+                }
+            } else {
+                if (dynamic_cast<Multiplication*>(part.get())) {
+                    throw CalculationError("The right operand of the multiplication operator (*) must be a number.", ErrorType::SyntaxError);
+                } else if (dynamic_cast<Division*>(part.get())) {
+                    throw CalculationError("The right operand of the division operator (/) must be a number.", ErrorType::SyntaxError);
                 }
             }
+        } else {
+            if (dynamic_cast<Multiplication*>(part.get())) {
+                throw CalculationError("The left operand of the multiplication operator (*) must be a number.", ErrorType::SyntaxError);
+            } else if (dynamic_cast<Division*>(part.get())) {
+                throw CalculationError("The left operand of the division operator (/) must be a number.", ErrorType::SyntaxError);
+            }
         }    
+    }
+
+    // Check for any remaining multiplication/division operators that couldn't be reduced
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        if (dynamic_cast<Multiplication*>(calculation_parts[i].get())) {
+            throw CalculationError("The multiplication operator (*) could not be evaluated. Check that both operands are valid numbers.", ErrorType::SyntaxError);
+        }
+        if (dynamic_cast<Division*>(calculation_parts[i].get())) {
+            throw CalculationError("The division operator (/) could not be evaluated. Check that both operands are valid numbers.", ErrorType::SyntaxError);
+        }
     }
     
 
@@ -357,34 +438,60 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
     for (int i = 0; i < calculation_parts.size(); i++) {
         std::unique_ptr<CalculationPart>& part = calculation_parts[i];
 
-        if (i != 0 && i != calculation_parts.size() - 1) {
-            std::unique_ptr<CalculationPart>& leftPart = calculation_parts[i - 1];
-            std::unique_ptr<CalculationPart>& rightPart = calculation_parts[i + 1];
-            if (Number* leftNum = dynamic_cast<Number*>(leftPart.get())) {
-                if (Number* rightNum = dynamic_cast<Number*>(rightPart.get())) {
+        if (i == 0 || i == calculation_parts.size() - 1) {
+            if (dynamic_cast<Addition*>(part.get()) || dynamic_cast<Subtraction*>(part.get())) {
+                throw CalculationError("Addition and subtraction operators cannot appear at the beginning or end of an expression.", ErrorType::SyntaxError);
+            }
+            continue;
+        }
 
-                    if (Addition* addition = dynamic_cast<Addition*>(part.get())) {
-                        Number result = addition->Calculate(*leftNum, *rightNum);
+        std::unique_ptr<CalculationPart>& leftPart = calculation_parts[i - 1];
+        std::unique_ptr<CalculationPart>& rightPart = calculation_parts[i + 1];
+        if (Number* leftNum = dynamic_cast<Number*>(leftPart.get())) {
+            if (Number* rightNum = dynamic_cast<Number*>(rightPart.get())) {
 
-                        // Replace left part with result, remove operator and right part
-                        leftPart = std::make_unique<Number>(result);
-                        calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
-                        calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
-                        i--; // Move back index to account for removed parts
-                        
-                    } else if (Subtraction* subtraction = dynamic_cast<Subtraction*>(part.get())) {
-                        Number result = subtraction->Calculate(*leftNum, *rightNum);
+                if (Addition* addition = dynamic_cast<Addition*>(part.get())) {
+                    Number result = addition->Calculate(*leftNum, *rightNum);
 
-                        // Replace left part with result, remove operator and right part
-                        leftPart = std::make_unique<Number>(result);
-                        calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
-                        calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
-                        i--; // Move back index to account for removed parts
-                    }
+                    // Replace left part with result, remove operator and right part
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
+                    calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
+                    i--; // Move back index to account for removed parts
+                    
+                } else if (Subtraction* subtraction = dynamic_cast<Subtraction*>(part.get())) {
+                    Number result = subtraction->Calculate(*leftNum, *rightNum);
 
+                    // Replace left part with result, remove operator and right part
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
+                    calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
+                    i--; // Move back index to account for removed parts
+                }
+            } else {
+                if (dynamic_cast<Addition*>(part.get())) {
+                    throw CalculationError("The right operand of the addition operator (+) must be a number.", ErrorType::SyntaxError);
+                } else if (dynamic_cast<Subtraction*>(part.get())) {
+                    throw CalculationError("The right operand of the subtraction operator (-) must be a number.", ErrorType::SyntaxError);
                 }
             }
+        } else {
+            if (dynamic_cast<Addition*>(part.get())) {
+                throw CalculationError("The left operand of the addition operator (+) must be a number.", ErrorType::SyntaxError);
+            } else if (dynamic_cast<Subtraction*>(part.get())) {
+                throw CalculationError("The left operand of the subtraction operator (-) must be a number.", ErrorType::SyntaxError);
+            }
         }    
+    }
+
+    // Check for any remaining addition/subtraction operators that couldn't be reduced
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        if (dynamic_cast<Addition*>(calculation_parts[i].get())) {
+            throw CalculationError("The addition operator (+) could not be evaluated. Check that both operands are valid numbers.", ErrorType::SyntaxError);
+        }
+        if (dynamic_cast<Subtraction*>(calculation_parts[i].get())) {
+            throw CalculationError("The subtraction operator (-) could not be evaluated. Check that both operands are valid numbers.", ErrorType::SyntaxError);
+        }
     }
 
 
@@ -393,11 +500,14 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
 
     // Get final result
+    if (calculation_parts.size() != 1) {
+        throw CalculationError("The expression could not be reduced to a single value.", ErrorType::SyntaxError);
+    }
+
     std::unique_ptr<CalculationPart>& finalResult = calculation_parts[0];
     if (Number* finalNum = dynamic_cast<Number*>(finalResult.get())) {
         return *finalNum;
     } else {
-        // Error, final result is not a number
-        return Number(0);
+        throw CalculationError("The expression could not be reduced to a numeric result.", ErrorType::SyntaxError);
     }
 }

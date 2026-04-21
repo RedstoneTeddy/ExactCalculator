@@ -3,6 +3,7 @@
 
 #include "base_structures.hpp"
 #include "number.hpp"
+#include "../CalculationError.hpp"
 
 
 class Operation : public CalculationPart {

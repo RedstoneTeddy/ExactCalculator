@@ -3,6 +3,7 @@
 #include "number.hpp"
 #include "multiplication.hpp"
 #include "compare.hpp"
+#include "../CalculationError.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -70,6 +71,20 @@ int FindQuotientDigit(Number& left, std::vector<Number>& divisors, int shift) {
 
 
 Number Division::Calculate(Number& a, Number& b) {
+    if (a.GetDigits().empty()) {
+        throw CalculationError("Division operand has no digits. Internal error in number representation.", ErrorType::SyntaxError);
+    }
+    if (b.GetDigits().empty()) {
+        throw CalculationError("Division operand has no digits. Internal error in number representation.", ErrorType::SyntaxError);
+    }
+
+    a.CorrectForSignificance();
+    b.CorrectForSignificance();
+
+    if (IsZeroFast(b)) {
+        throw CalculationError("Division by zero is not allowed.", ErrorType::DivisionByZero);
+    }
+
     Number result(a.GetMaxSignificant());
 
     Number a_leftover(a.GetMaxSignificant());

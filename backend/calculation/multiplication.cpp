@@ -4,12 +4,19 @@
 #include "addition.hpp"
 
 #include "number.hpp"
-
+#include "../CalculationError.hpp"
 #include <vector>
 
 
 Number Multiplication::Calculate(Number& a, Number& b) {
     Number result(a.GetMaxSignificant());
+
+    if (a.GetDigits().empty()) {
+        throw CalculationError("Multiplication operand has no digits. Internal error in number representation.", ErrorType::SyntaxError);
+    }
+    if (b.GetDigits().empty()) {
+        throw CalculationError("Multiplication operand has no digits. Internal error in number representation.", ErrorType::SyntaxError);
+    }
 
     a.CorrectForSignificance();
     b.CorrectForSignificance();

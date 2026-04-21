@@ -3,6 +3,9 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <cctype>
+
+#include "CalculationError.hpp"
 
 #include "calculation/base_structures.hpp"
 #include "calculation/number.hpp"
@@ -20,6 +23,22 @@
 #include "calculation/multiplication.hpp"
 #include "calculation/division.hpp"
 #include "calculation/exponent.hpp"
+
+namespace {
+bool IsValidIdentifier(const std::string& token) {
+    if (token.empty()) {
+        return false;
+    }
+
+    for (char c : token) {
+        if (!(std::isalnum(static_cast<unsigned char>(c)) || c == '_')) {
+            return false;
+        }
+    }
+
+    return true;
+}
+}
 
 
 
@@ -96,6 +115,9 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
 
         // Else: Append to current part for number or a function name
         else {
+            if (!std::isalnum(static_cast<unsigned char>(c)) && c != '_' && c != '.') {
+                throw CalculationError("The expression contains an unsupported character.", ErrorType::SyntaxError);
+            }
             currentPart += c;
         }
     }
@@ -113,6 +135,10 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
     // Functions must start with a capital letter, otherwise treated as a variable
     // Functions
     if (currentPart[0] >= 'A' && currentPart[0] <= 'Z') {
+        if (!IsValidIdentifier(currentPart)) {
+            throw CalculationError("Function names may only contain letters, digits, and underscores.", ErrorType::SyntaxError);
+        }
+
         // Handle functions
         // Constants
         if (currentPart == "Pi" || currentPart == "E" || currentPart == "G" || currentPart == "C" || currentPart == "U") {
@@ -195,6 +221,10 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
 
     // Variables
     } else if (currentPart[0] >= 'a' && currentPart[0] <= 'z') {
+        if (!IsValidIdentifier(currentPart)) {
+            throw CalculationError("Variable names may only contain letters, digits, and underscores.", ErrorType::SyntaxError);
+        }
+
         // Handle variables
         Variable var(currentPart, nullptr, nullptr);
         parts.push_back(std::make_unique<Variable>(var));

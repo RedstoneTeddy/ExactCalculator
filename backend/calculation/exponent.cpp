@@ -3,6 +3,7 @@
 #include "addition.hpp"
 #include "number.hpp"
 #include "compare.hpp"
+#include "../CalculationError.hpp"
 #include <algorithm>
 #include <limits>
 #include <vector>
@@ -96,6 +97,13 @@ Number Exponent::Calculate(Number& a, Number& b) {
 
 
 Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
+    if (a.GetDigits().empty()) {
+        throw CalculationError("Exponent operand has no digits. Internal error in number representation.", ErrorType::SyntaxError);
+    }
+    if (b.GetDigits().empty()) {
+        throw CalculationError("Exponent operand has no digits. Internal error in number representation.", ErrorType::SyntaxError);
+    }
+
     Number result(a.GetMaxSignificant());
     result.SetNumber(false, {1}, 0); // Start with 1
 
@@ -115,6 +123,9 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
         return one;
     }
     if (IsZeroFast(a)) {
+        if (b.GetIsNegative()) {
+            throw CalculationError("Cannot calculate root of zero with negative exponent.", ErrorType::DivisionByZero);
+        }
         return Number(a.GetMaxSignificant());
     }
 
@@ -122,25 +133,27 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
     b_leftover.SetNumber(false, b.GetDigits(), b.GetExponent());
     b_leftover.SetMaxSignificant(rootSignificant);
     b_leftover.CorrectForSignificance();
+    Number b_magnitude = b_leftover;
+    b_magnitude.SetNegative(false);
 
 
     // Base exponent (before comma)
     int integerExponent = 0;
-    if (TryGetNonNegativeInteger(b_leftover, integerExponent)) {
+    if (TryGetNonNegativeInteger(b_magnitude, integerExponent)) {
         result = PowerBySquaring(a, integerExponent);
-        b_leftover.SetNumber(false, {0}, 0);
+        b_magnitude.SetNumber(false, {0}, 0);
     } else {
-        while (!IsZeroFast(b_leftover) && b_leftover.GetExponent() >= 0) {
+        while (!IsZeroFast(b_magnitude) && b_magnitude.GetExponent() >= 0) {
             result = Multiplication::Calculate(result, a);
-            b_leftover = Subtraction::Calculate(b_leftover, one);
+            b_magnitude = Subtraction::Calculate(b_magnitude, one);
         }
     }
 
 
     // Root-exponent (after comma)
-    if (!IsZeroFast(b_leftover)) {
+    if (!IsZeroFast(b_magnitude)) {
         if (a.GetIsNegative()) {
-            return Number(a.GetMaxSignificant()); // Return 0 if trying to calculate root of negative number
+            throw CalculationError("Cannot calculate root of negative number.", ErrorType::DomainError);
         }
 
         Number current_root(rootSignificant);
@@ -161,21 +174,21 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
 
             // If divider is below b_leftover's representable subtraction granularity,
             // additional iterations cannot change b_leftover at current precision.
-            int subtractionNoOpExponent = b_leftover.GetExponent() - b_leftover.GetMaxSignificant() - 1;
+            int subtractionNoOpExponent = b_magnitude.GetExponent() - b_magnitude.GetMaxSignificant() - 1;
             if (current_divider.GetExponent() < subtractionNoOpExponent) {
                 break;
             }
 
             Number new_root = Exp_SquareRoot(current_root, rootSignificant);
 
-            if (CompareNumbers(b_leftover, current_divider) >= 0) {
+            if (CompareNumbers(b_magnitude, current_divider) >= 0) {
                 result = Multiplication::Calculate(result, new_root);
-                b_leftover = Subtraction::Calculate(b_leftover, current_divider);
+                b_magnitude = Subtraction::Calculate(b_magnitude, current_divider);
             }
 
             // Check if calculation is finished
             run = true;
-            if (IsZeroFast(b_leftover)) {
+            if (IsZeroFast(b_magnitude)) {
                 run = false;
             }
 
@@ -206,7 +219,7 @@ Number Exponent::Calculate(Number& a, Number& b, int rootSignificant) {
     // Inverse of result if exponent is negative
     if (b.GetIsNegative()) {
         if (IsZeroFast(result)) {
-            return Number(a.GetMaxSignificant()); // Return 0 if trying to calculate inverse of 0
+            throw CalculationError("Cannot calculate root of zero with negative exponent.", ErrorType::DivisionByZero);
         }
         result = Division::Calculate(one, result);
     }
@@ -306,7 +319,7 @@ Number Exp_Average(Number& a, Number& b) {
 
 Number Exp_SquareRoot(Number& number, int rootSignificant) {
     if (number.GetIsNegative()) {
-        return Number(number.GetMaxSignificant()); // Return 0 if trying to calculate square root of negative number
+        throw CalculationError("Square root of a negative number is not defined in the real-number calculator.", ErrorType::DomainError);
     }
     if (IsZeroFast(number)) {
         return Number(number.GetMaxSignificant()); // Return 0 if trying to calculate square root of 0

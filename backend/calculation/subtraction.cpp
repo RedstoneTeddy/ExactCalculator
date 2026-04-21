@@ -2,6 +2,7 @@
 #include "subtraction.hpp"
 #include "addition.hpp"
 #include "compare.hpp"
+#include "../CalculationError.hpp"
 
 #include <algorithm>
 
@@ -55,6 +56,13 @@ Number Subtraction::Calculate(Number& a, Number& b) {
 
 Number Subtraction::Calculate(Number& a, Number& b, int shiftB) {
     Number result(a.GetMaxSignificant());
+
+    if (a.GetDigits().empty()) {
+        throw CalculationError("Subtraction operand has no digits. Internal error in number representation.", ErrorType::SyntaxError);
+    }
+    if (b.GetDigits().empty()) {
+        throw CalculationError("Subtraction operand has no digits. Internal error in number representation.", ErrorType::SyntaxError);
+    }
 
     if (shiftB == 0 && !a.GetIsNegative() && !b.GetIsNegative()) {
         int cmp = CompareNumbers(a, b, true);

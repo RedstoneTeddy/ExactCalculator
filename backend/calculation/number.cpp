@@ -1,4 +1,5 @@
 #include "number.hpp"
+#include "../CalculationError.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -66,10 +67,18 @@ void Number::SetFromString(std::string value) {
     digits.clear();
     exponent = 0;
 
+    if (value.empty()) {
+        throw CalculationError("The number literal is empty.", ErrorType::SyntaxError);
+    }
+
     // Negative sign
     if (!value.empty() && (value.at(0) == '_' || value.at(0) == '-')) {
         isNegative = true;
         value.erase(0, 1);
+    }
+
+    if (value.empty()) {
+        throw CalculationError("The number literal is empty.", ErrorType::SyntaxError);
     }
 
     // Parse optional scientific exponent (e.g. 1.23e-4)
@@ -77,8 +86,15 @@ void Number::SetFromString(std::string value) {
     std::string mantissa = value;
     std::size_t ePos = value.find_first_of("eE");
     if (ePos != std::string::npos) {
+        if (value.find_first_of("eE", ePos + 1) != std::string::npos) {
+            throw CalculationError("The number literal contains more than one scientific exponent marker.", ErrorType::SyntaxError);
+        }
         mantissa = value.substr(0, ePos);
         std::string exponentPart = value.substr(ePos + 1);
+
+        if (mantissa.empty() || exponentPart.empty()) {
+            throw CalculationError("The number literal is missing a mantissa or exponent.", ErrorType::SyntaxError);
+        }
 
         int sign = 1;
         std::size_t expIndex = 0;
@@ -87,14 +103,23 @@ void Number::SetFromString(std::string value) {
             expIndex = 1;
         }
 
+        if (expIndex >= exponentPart.size()) {
+            throw CalculationError("The scientific exponent is missing digits.", ErrorType::SyntaxError);
+        }
+
         int parsedExponent = 0;
+        bool exponentDigitSeen = false;
         for (; expIndex < exponentPart.size(); expIndex++) {
             char c = exponentPart.at(expIndex);
             if (c >= '0' && c <= '9') {
+                exponentDigitSeen = true;
                 parsedExponent = parsedExponent * 10 + (c - '0');
             } else {
-                break;
+                throw CalculationError("The scientific exponent may only contain digits, optionally after a leading sign.", ErrorType::SyntaxError);
             }
+        }
+        if (!exponentDigitSeen) {
+            throw CalculationError("The scientific exponent does not contain any digits.", ErrorType::SyntaxError);
         }
         scientificExponent = sign * parsedExponent;
     }
@@ -103,19 +128,28 @@ void Number::SetFromString(std::string value) {
     std::vector<int> newDigits;
     int digitsBeforeDecimal = 0;
     bool decimalSeen = false;
+    bool digitSeen = false;
 
     for (int i = 0; i < mantissa.size(); i++) {
         char c = mantissa.at(i);
         if (c == '.') {
-            if (!decimalSeen) {
-                decimalSeen = true;
+            if (decimalSeen) {
+                throw CalculationError("The number literal contains more than one decimal point.", ErrorType::SyntaxError);
             }
+            decimalSeen = true;
         } else if (c >= '0' && c <= '9') {
+            digitSeen = true;
             newDigits.push_back(c - '0');
             if (!decimalSeen) {
                 digitsBeforeDecimal++;
             }
+        } else {
+            throw CalculationError("The number literal contains invalid characters.", ErrorType::SyntaxError);
         }
+    }
+
+    if (!digitSeen) {
+        throw CalculationError("The number literal does not contain any digits.", ErrorType::SyntaxError);
     }
 
     exponent = digitsBeforeDecimal - 1 + scientificExponent;

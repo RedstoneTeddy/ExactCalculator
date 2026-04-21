@@ -8,6 +8,7 @@
 #include "../calculation/division.hpp"
 #include "../calculation/exponent.hpp"
 #include "constants.hpp"
+#include "../CalculationError.hpp"
 
 #include <algorithm>
 #include <string>
@@ -309,7 +310,7 @@ Number Tangent::Calculate(Number input) {
     Number cosineValue = cosine.Calculate(input);
 
     if (IsZeroFast(cosineValue)) {
-        return Number(maxSignificant);
+        throw CalculationError("Tangent is undefined when cosine equals zero, because that would require division by zero.", ErrorType::DivisionByZero);
     }
 
     Number result = division.Calculate(sineValue, cosineValue);
@@ -336,7 +337,7 @@ Number ArcSine::Calculate(Number input) {
 
     Number absX = MakeAbsCopy(x);
     if (IsGreater(absX, one)) {
-        return zero;
+        throw CalculationError("Arcsine is only defined for inputs between -1 and 1.", ErrorType::DomainError);
     }
 
     if (x.GetIsNegative()) {
@@ -388,7 +389,7 @@ Number ArcCosine::Calculate(Number input) {
 
     Number absX = MakeAbsCopy(x);
     if (IsGreater(absX, one)) {
-        return zero;
+        throw CalculationError("Arccosine is only defined for inputs between -1 and 1.", ErrorType::DomainError);
     }
 
     if (CompareNumbers(x, one) == 0) {

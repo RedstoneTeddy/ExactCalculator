@@ -1,6 +1,7 @@
 #include "compare.hpp"
 
 #include "number.hpp"
+#include "../CalculationError.hpp"
 
 #include <algorithm>
 
@@ -8,6 +9,13 @@ int CompareNumbers(Number& num1, Number& num2, bool ignoreSign, int shiftSecond)
     // If num1 > num2 returns  1
     // If num1 = num2 returns  0
     // If num1 < num2 returns -1
+
+    if (num1.GetDigits().empty()) {
+        throw CalculationError("Compare operand has no digits. Internal error in number representation.", ErrorType::SyntaxError);
+    }
+    if (num2.GetDigits().empty()) {
+        throw CalculationError("Compare operand has no digits. Internal error in number representation.", ErrorType::SyntaxError);
+    }
 
     num1.CorrectForSignificance();
     num2.CorrectForSignificance();

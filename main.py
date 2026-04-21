@@ -47,6 +47,15 @@ while True:
         print(Help_Text())
         continue
 
-    result = calc.Calculate_string(user_input)
-    print(f"= {result}\n")
+    calc.Calculate(user_input)
+    if calc.Get_last_error() is not None and calc.Get_last_error() != "":
+        errorType: str = calc.Get_last_error().split(":")[0]
+        errorRest: list[str] = calc.Get_last_error().split(":")[1:]
+        errorMessage: str = ":".join(errorRest)
+        print(f"---- {errorType} ----")
+        print(errorMessage)
+        print("")
+    else:
+        result = calc.Calculate_string()
+        print(f"= {result}\n")
 

@@ -4,6 +4,7 @@
 #include "../calculation/exponent.hpp"
 #include "../calculation/division.hpp"
 #include "../calculation/compare.hpp"
+#include "../CalculationError.hpp"
 
 
 Number SquareRoot::Calculate(Number input) {
@@ -25,7 +26,7 @@ Number Root::Calculate(Number degree, Number input) {
     one.SetFromString("1");
 
     if (CompareNumbers(degree, zero) == 0) {
-        return zero;
+        throw CalculationError("The root degree cannot be zero because it would require division by zero.", ErrorType::DivisionByZero);
     }
 
     Number r = div.Calculate(one, degree);

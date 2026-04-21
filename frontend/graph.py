@@ -1,5 +1,5 @@
 import cpp_main
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt # type: ignore
 import time
 
 def Graph_function(func: str, graph_radius: float = 100, point_distance: float = 1, significance: int = 10) -> float:
@@ -28,8 +28,9 @@ def Graph_function(func: str, graph_radius: float = 100, point_distance: float =
     for func_num in range(len(functions)):
         y.append([])
         for i in range(len(x)):
-            calc.Calculate_string(f"x = {str(x[i]).replace('-', '_')}")
-            y[func_num].append(calc.Calculate_double(functions[func_num]))
+            calc.Calculate(f"x = {str(x[i]).replace('-', '_')}")
+            calc.Calculate(functions[func_num])
+            y[func_num].append(calc.Calculate_double())
 
     # Display the graph
     for func_num in range(len(functions)):

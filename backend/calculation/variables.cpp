@@ -1,4 +1,5 @@
 #include "variables.hpp"
+#include "../CalculationError.hpp"
 
 #include "number.hpp"
 #include "base_structures.hpp"
@@ -15,24 +16,19 @@ Variable::Variable(std::string name, std::vector<Number>* varNumbers, std::vecto
 
 Number Variable::GetValue() {
     if (!varNames || !varNumbers) {
-        std::cout << "Error: Variable pointers not initialized. Returning 0." << std::endl;
-        return Number(0);
+        throw CalculationError("Internal variable storage is not initialized.", ErrorType::SyntaxError);
     }
     for (int i = 0; i < varNames->size(); i++) {
         if ((*varNames)[i] == name) {
             return (*varNumbers)[i];
         }
     }
-    // If variable not found, return a default value (e.g., 0)
-
-    std::cout << "Error: Variable '" << name << "' not found. Returning 0." << std::endl;
-    return Number(0);
+    throw CalculationError("The variable '" + name + "' is not defined.", ErrorType::VariableNotDefined);
 }
 
 void SetVariable(std::string name, Number value, std::vector<Number>* varNumbers, std::vector<std::string>* varNames) {
     if (!varNames || !varNumbers) {
-        std::cout << "Error: Variable pointers not initialized." << std::endl;
-        return;
+        throw CalculationError("Internal variable storage is not initialized.", ErrorType::SyntaxError);
     }
     for (int i = 0; i < varNumbers->size(); i++) {
         if ((*varNames)[i] == name) {
