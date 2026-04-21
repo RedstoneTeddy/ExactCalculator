@@ -16,6 +16,8 @@
 #include "../functions/constants.hpp"
 #include "../functions/factorial.hpp"
 #include "../functions/root.hpp"
+#include "../functions/trigonometric.hpp"
+#include "../functions/logarithmic.hpp"
 
 
 Calc_main::Calc_main() {
@@ -131,6 +133,99 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                                 calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
                                 calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
                                 i -= 3; // Move back index to account for removed parts
+                            }
+
+                            // Sine
+                            else if (Sine* sine = dynamic_cast<Sine*>(functionPart.get())) {
+                                Number result = sine->Calculate(functionArguments[0]);
+
+                                // Replace function part with result, remove brackets and inner parts
+                                functionPart = std::make_unique<Number>(result);
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                i -= 3; // Move back index to account for removed parts
+                            }
+
+                            // Cosine
+                            else if (Cosine* cosine = dynamic_cast<Cosine*>(functionPart.get())) {
+                                Number result = cosine->Calculate(functionArguments[0]);
+
+                                // Replace function part with result, remove brackets and inner parts
+                                functionPart = std::make_unique<Number>(result);
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                i -= 3; // Move back index to account for removed parts
+                            }
+
+                            // Tangent
+                            else if (Tangent* tangent = dynamic_cast<Tangent*>(functionPart.get())) {
+                                Number result = tangent->Calculate(functionArguments[0]);
+
+                                // Replace function part with result, remove brackets and inner parts
+                                functionPart = std::make_unique<Number>(result);
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                i -= 3; // Move back index to account for removed parts
+                            }
+
+                            // Arc sine
+                            else if (ArcSine* arcSine = dynamic_cast<ArcSine*>(functionPart.get())) {
+                                Number result = arcSine->Calculate(functionArguments[0]);
+
+                                functionPart = std::make_unique<Number>(result);
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                i -= 3;
+                            }
+
+                            // Arc cosine
+                            else if (ArcCosine* arcCosine = dynamic_cast<ArcCosine*>(functionPart.get())) {
+                                Number result = arcCosine->Calculate(functionArguments[0]);
+
+                                functionPart = std::make_unique<Number>(result);
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                i -= 3;
+                            }
+
+                            // Arc tangent
+                            else if (ArcTangent* arcTangent = dynamic_cast<ArcTangent*>(functionPart.get())) {
+                                Number result = arcTangent->Calculate(functionArguments[0]);
+
+                                functionPart = std::make_unique<Number>(result);
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                i -= 3;
+                            }
+
+                            // Natural logarithm
+                            else if (NaturalLogarithm* naturalLogarithm = dynamic_cast<NaturalLogarithm*>(functionPart.get())) {
+                                Number result = naturalLogarithm->Calculate(functionArguments[0]);
+
+                                functionPart = std::make_unique<Number>(result);
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                i -= 3;
+                            }
+
+                            // Logarithm with base
+                            else if (Logarithm* logarithm = dynamic_cast<Logarithm*>(functionPart.get())) {
+                                Number result = logarithm->Calculate(functionArguments[0], functionArguments[1]);
+
+                                functionPart = std::make_unique<Number>(result);
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
+                                i -= 5;
                             }
 
                             // n-th Root

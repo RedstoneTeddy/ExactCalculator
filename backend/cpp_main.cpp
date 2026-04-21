@@ -21,11 +21,12 @@ double TestNumber(std::string input, int maxSignificant) {
 
 class Calculator {
 public:
-    Calculator(int maxSignificant) {
-        this->maxSignificant = maxSignificant;
-        this->finalSignificant = maxSignificant;
-        this->rootSignificant = int(maxSignificant / 2);
-    }
+    Calculator(int maxSignificant)
+        : maxSignificant(maxSignificant < 1 ? 1 : maxSignificant),
+          finalSignificant(maxSignificant < 1 ? 1 : maxSignificant),
+          rootSignificant((maxSignificant < 1 ? 1 : maxSignificant) / 2),
+          LastResult(maxSignificant < 1 ? 1 : maxSignificant) {}
+
 
     int GetMaxSignificant() {
         return maxSignificant;
@@ -57,12 +58,21 @@ public:
         this->rootSignificant = rootSignificant;
     }
 
+    void Calculate(std::string input) {
+        LastError = "";
+        LastResult = Calculate_num(input);
+    }
+
     double Calculate_double(std::string input) {
-        return Calculate_num(input).GetAsDouble();
+        return LastResult.GetAsDouble();
     }
 
     std::string Calculate_string(std::string input) {
-        return Calculate_num(input).GetAsString();
+        return LastResult.GetAsString();
+    }
+
+    std::string GetLastError() {
+        return LastError;
     }
 
 private:
@@ -70,6 +80,9 @@ private:
     int finalSignificant;
     int rootSignificant;
     Calc_main calc;
+
+    Number LastResult;
+    std::string LastError;
 
     Number Calculate_num(std::string input) {
         // Remove whitespace from input

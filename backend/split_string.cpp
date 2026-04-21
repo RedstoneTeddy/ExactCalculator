@@ -12,6 +12,8 @@
 #include "functions/constants.hpp"
 #include "functions/factorial.hpp"
 #include "functions/root.hpp"
+#include "functions/trigonometric.hpp"
+#include "functions/logarithmic.hpp"
 
 #include "calculation/addition.hpp"
 #include "calculation/subtraction.hpp"
@@ -134,6 +136,54 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
         else if (currentPart == "Root") {
             Root r;
             parts.push_back(std::make_unique<Root>(r));
+        }
+
+        // Sine
+        else if (currentPart == "Sin" || currentPart == "Sine") {
+            Sine sine;
+            parts.push_back(std::make_unique<Sine>(sine));
+        }
+
+        // Cosine
+        else if (currentPart == "Cos" || currentPart == "Cosine") {
+            Cosine cosine;
+            parts.push_back(std::make_unique<Cosine>(cosine));
+        }
+
+        // Tangent
+        else if (currentPart == "Tan" || currentPart == "Tangent") {
+            Tangent tangent;
+            parts.push_back(std::make_unique<Tangent>(tangent));
+        }
+
+        // Arc sine
+        else if (currentPart == "Asin" || currentPart == "ArcSin" || currentPart == "ArcSine") {
+            ArcSine arcSine;
+            parts.push_back(std::make_unique<ArcSine>(arcSine));
+        }
+
+        // Arc cosine
+        else if (currentPart == "Acos" || currentPart == "ArcCos" || currentPart == "ArcCosine") {
+            ArcCosine arcCosine;
+            parts.push_back(std::make_unique<ArcCosine>(arcCosine));
+        }
+
+        // Arc tangent
+        else if (currentPart == "Atan" || currentPart == "ArcTan" || currentPart == "ArcTangent") {
+            ArcTangent arcTangent;
+            parts.push_back(std::make_unique<ArcTangent>(arcTangent));
+        }
+
+        // Logarithm with base
+        else if (currentPart == "Log" || currentPart == "Logarithm") {
+            Logarithm logarithm;
+            parts.push_back(std::make_unique<Logarithm>(logarithm));
+        }
+
+        // Natural logarithm
+        else if (currentPart == "Ln" || currentPart == "NaturalLog" || currentPart == "NaturalLogarithm") {
+            NaturalLogarithm naturalLogarithm;
+            parts.push_back(std::make_unique<NaturalLogarithm>(naturalLogarithm));
         }
 
         // Treat unknown functions as variables, so they can be defined by the user

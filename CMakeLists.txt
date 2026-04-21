@@ -18,6 +18,7 @@ pybind11_add_module(cpp_main
 	backend/functions/constants.cpp
 	backend/functions/factorial.cpp
 	backend/functions/root.cpp
+	backend/functions/trigonometric.cpp
 
 	backend/calculation/compare.cpp
 	backend/calculation/addition.cpp
@@ -25,6 +26,7 @@ pybind11_add_module(cpp_main
 	backend/calculation/multiplication.cpp
 	backend/calculation/division.cpp
 	backend/calculation/exponent.cpp
+	backend/functions/logarithmic.cpp
 )
 
 # target_include_directories(cpp_main PRIVATE

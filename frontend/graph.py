@@ -13,22 +13,27 @@ def Graph_function(func: str, graph_radius: float = 100, point_distance: float =
     Note: The function should be in terms of 'x' and can include basic arithmetic operations and parentheses.
     """
 
+    functions : list[str] = func.split(";")
+
 
     # Prepare Calculation & Calculator
     start_time = time.time()
     x : list[float] = []
-    y : list[float] = []
+    y : list[list[float]] = []
     for i in range(-int(graph_radius/point_distance), int(graph_radius/point_distance) + 1, 1):
         x.append(i * point_distance)
 
     # Calculate all y values
     calc : cpp_main.Calculator = cpp_main.Calculator(significance)
-    for i in range(len(x)):
-        calc.Calculate_string(f"x = {str(x[i]).replace('-', '_')}")
-        y.append(calc.Calculate_double(func))
+    for func_num in range(len(functions)):
+        y.append([])
+        for i in range(len(x)):
+            calc.Calculate_string(f"x = {str(x[i]).replace('-', '_')}")
+            y[func_num].append(calc.Calculate_double(functions[func_num]))
 
     # Display the graph
-    plt.plot(x, y, marker='.')
+    for func_num in range(len(functions)):
+        plt.plot(x, y[func_num], marker='.')
     plt.xlim(-graph_radius, graph_radius)
     plt.ylim(-graph_radius, graph_radius)
     plt.title(f"Graph of {func}")

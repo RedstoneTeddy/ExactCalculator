@@ -365,6 +365,7 @@ Number Exp_Round(Number& number, int significant) {
         if (roundedDigits.at(0) == 0) {
             // All digits were 9 and got rounded up to 0, so we need to add a new leading digit
             roundedDigits.insert(roundedDigits.begin(), 1);
+            number.SetExponent(number.GetExponent() + 1);
         }
     }
 
