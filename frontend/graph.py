@@ -1,6 +1,7 @@
 import cpp_main
 import matplotlib.pyplot as plt # type: ignore
 import time
+import frontend.graph_calculation
 
 def Graph_function(func: str, graph_radius: float = 100, point_distance: float = 1, significance: int = 10) -> float:
     """
@@ -23,14 +24,28 @@ def Graph_function(func: str, graph_radius: float = 100, point_distance: float =
     for i in range(-int(graph_radius/point_distance), int(graph_radius/point_distance) + 1, 1):
         x.append(i * point_distance)
 
+
     # Calculate all y values
-    calc : cpp_main.Calculator = cpp_main.Calculator(significance)
+    y_uncorrected : list[list[float | None]] = frontend.graph_calculation.Calculate_graphs(functions, timeout=10.0, x_values=x, significance=significance)
     for func_num in range(len(functions)):
         y.append([])
         for i in range(len(x)):
-            calc.Calculate(f"x = {str(x[i]).replace('-', '_')}")
-            calc.Calculate(functions[func_num])
-            y[func_num].append(calc.Calculate_double())
+            curr_y : float | None = y_uncorrected[func_num][i]
+            if curr_y is not None:
+                y[func_num].append(curr_y)
+            else:
+                y[func_num].append(float('nan'))
+
+
+    # OLD CODE
+    # Calculate all y values
+    # calc : cpp_main.Calculator = cpp_main.Calculator(significance)
+    # for func_num in range(len(functions)):
+    #     y.append([])
+    #     for i in range(len(x)):
+    #         calc.Calculate(f"x = {str(x[i]).replace('-', '_')}")
+    #         calc.Calculate(functions[func_num])
+    #         y[func_num].append(calc.Calculate_double())
 
     # Display the graph
     for func_num in range(len(functions)):
@@ -41,6 +56,7 @@ def Graph_function(func: str, graph_radius: float = 100, point_distance: float =
     plt.xlabel("x")
     plt.ylabel("f(x)")
     plt.grid(True)
+    plt.legend(functions)
     end_time = time.time()
     plt.show()
 
