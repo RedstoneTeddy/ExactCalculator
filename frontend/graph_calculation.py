@@ -34,7 +34,7 @@ def Calculate_graphs(func: list[str], timeout: float, x_values: list[float], sig
         max_threads = 1
 
     # Avoid creating many idle threads for small inputs.
-    max_threads = min(max_threads, max(1, len(x_values)))
+    max_threads = min(max_threads, max(1, len(x_values)//10))
 
     start_time: float = 0.0
     end_time: float = 0.0

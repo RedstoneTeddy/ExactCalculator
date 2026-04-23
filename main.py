@@ -3,19 +3,23 @@ import cpp_main
 from frontend.graph import Graph_function
 from frontend.help_text import Help_Text
 from frontend.set_significance import Set_Significance
+from frontend.graph_window import GraphWindow
 
 significance: int = 100
 finalSignificance: int = 10
 rootSignificance: int = 50
+graphZoom: int = 5
 calc: cpp_main.Calculator = cpp_main.Calculator(significance)
 calc.FinalSignificance = finalSignificance
 calc.RootSignificance = rootSignificance
+
+GWindow : GraphWindow = GraphWindow()
 
 print("---- Exact Calculator ----")
 print("Internal Commands:")
 print(" - exit, quit: Exit the program")
 print(" - set_significance : Opens the menu to set the maximum significant digits for calculations")
-print(" - graph <function : str> <graph_radius : float> <point_distance : float>: Graph the specified function")
+print(" - graph <function : str> : Graph the specified function")
 print(" - func : See the documentation for supported functions and syntax")
 print("")
 
@@ -25,7 +29,7 @@ while True:
         break
 
     if user_input.startswith("set_significance"):
-        Set_Significance(calc)
+        graphZoom = Set_Significance(calc, graphZoom)
         continue
 
     if user_input.replace(" ", "") == "":
@@ -34,11 +38,10 @@ while True:
     if user_input.startswith("graph "):
         try:
             parts = user_input.split(" ", 3)
-            func = parts[1]
-            graph_radius = float(parts[2])
-            point_distance = float(parts[3])
-            time : float = Graph_function(func, graph_radius, point_distance)
-            print(f"Graphing completed in {time:.2f} seconds.\n")
+            func_parts = parts[1:]
+            func: str = " ".join(func_parts[:])
+            GWindow.Load_function(func, graphZoom)
+            GWindow.start()
         except (IndexError, ValueError):
             print("Invalid command. Usage: graph <function> <graph_radius> <point_distance>\n")
         continue
@@ -58,4 +61,5 @@ while True:
     else:
         result = calc.Calculate_string()
         print(f"= {result}\n")
+
 
