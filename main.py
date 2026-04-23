@@ -1,9 +1,10 @@
 import cpp_main
 
-from frontend.graph import Graph_function
-from frontend.help_text import Help_Text
+from frontend.help_text import Help_functions, Help_message
 from frontend.set_significance import Set_Significance
 from frontend.graph_window import GraphWindow
+
+import frontend.session_handler as session_handler
 
 significance: int = 100
 finalSignificance: int = 10
@@ -15,27 +16,46 @@ calc.RootSignificance = rootSignificance
 
 GWindow : GraphWindow = GraphWindow()
 
-print("---- Exact Calculator ----")
-print("Internal Commands:")
-print(" - exit, quit: Exit the program")
-print(" - set_significance : Opens the menu to set the maximum significant digits for calculations")
-print(" - graph <function : str> : Graph the specified function")
-print(" - func : See the documentation for supported functions and syntax")
+print("\n---- Exact Calculator ----")
+print(" - /exit, /quit: Exit the program")
+print(" - /help : Show this help message")
+
 print("")
 
 while True:
     user_input: str  = input("> ")
-    if user_input in ["exit", "quit", "Exit", "Quit"]:
-        break
-
-    if user_input.startswith("set_significance"):
-        graphZoom = Set_Significance(calc, graphZoom)
-        continue
-
     if user_input.replace(" ", "") == "":
         continue
 
-    if user_input.startswith("graph "):
+    # Commands for the user interface
+    if user_input in ["/exit", "/quit"]:
+        break
+
+    if user_input == "/help":
+        print(Help_message())
+        continue
+
+    if user_input.startswith("/save"):
+        filename: str = user_input.split(" ", 1)[1] if len(user_input.split(" ", 1)) > 1 else "session.dat"
+        session_handler.Save_session(calc, filename)
+        print(f"Session saved to {filename}\n")
+        continue
+
+    if user_input.startswith("/load"):
+        filename = user_input.split(" ", 1)[1] if len(user_input.split(" ", 1)) > 1 else "session.dat"
+        try:
+            session_handler.Load_session(calc, filename)
+            print(f"Session loaded from {filename}\n")
+        except FileNotFoundError:
+            print(f"File {filename} not found.\n")
+        continue
+
+    if user_input.startswith("/set_significance"):
+        graphZoom = Set_Significance(calc, graphZoom)
+        continue
+
+
+    if user_input.startswith("/graph"):
         try:
             parts = user_input.split(" ", 3)
             func_parts = parts[1:]
@@ -46,10 +66,34 @@ while True:
             print("Invalid command. Usage: graph <function> <graph_radius> <point_distance>\n")
         continue
 
-    if user_input.startswith("func"):
-        print(Help_Text())
+    if user_input.startswith("/func"):
+        print(Help_functions())
         continue
 
+    if user_input.startswith("/clear"):
+        print("\033[H\033[J", end="")
+        continue
+
+    if user_input.startswith("/get_all"):
+        variable_names: list[str] = calc.Get_variable_names()
+        for name in variable_names:
+            calc.Calculate(name)
+            value = calc.Calculate_scientific_string()
+            print(f"{name} = {value}")
+        print("")
+        continue
+
+    if user_input.startswith("/delete"):
+        try:
+            variable_name: str = user_input.split(" ", 1)[1]
+            calc.Delete_variable(variable_name)
+            print(f"Variable '{variable_name}' deleted.\n")
+        except IndexError:
+            print("Invalid command. Usage: delete <variable_name>\n")
+        continue
+
+
+    # Send calculation to the C++ backend
     calc.Calculate(user_input)
     if calc.Get_last_error() is not None and calc.Get_last_error() != "":
         errorType: str = calc.Get_last_error().split(":")[0]
@@ -59,7 +103,10 @@ while True:
         print(errorMessage)
         print("")
     else:
-        result = calc.Calculate_string()
+        result = calc.Calculate_scientific_string()
         print(f"= {result}\n")
 
 
+
+
+# Add a function which solves equations by bounds.

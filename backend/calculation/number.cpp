@@ -212,7 +212,7 @@ double Number::GetAsDouble() {
 }
 
 
-std::string Number::GetAsString() {
+std::string Number::GetAsString(bool useScientific) {
     std::string result = "";
 
     if (isNegative) {
@@ -224,14 +224,34 @@ std::string Number::GetAsString() {
     }
 
     // Scientific notation
-    for (int i = 0; i < digits.size(); i++) {
-        if (i == 1) {
-            result += ".";
+    if (useScientific && (exponent > -7 && exponent < 7)) {
+        for (int i = 0; i < digits.size(); i++) {
+            if (i == 1) {
+                result += ".";
+            }
+            result += std::to_string(digits.at(i));
         }
-        result += std::to_string(digits.at(i));
-    }
-    if (exponent != 0) {
         result += "*10^" + std::to_string(exponent);
+    } else {
+        // Standard notation
+        int currentExponent = exponent;
+        if (currentExponent < 0) {
+            result += "0.";
+            for (int i = 0; i < -currentExponent - 1; i++) {
+                result += "0";
+            }
+        }
+        for (int i = 0; i < digits.size(); i++) {
+            result += std::to_string(digits.at(i));
+            if (currentExponent == 0 && i != digits.size() - 1) {
+                result += ".";
+            }
+            currentExponent--;
+        }
+        while (currentExponent > 0) {
+            result += "0";
+            currentExponent--;
+        }
     }
 
     return result;

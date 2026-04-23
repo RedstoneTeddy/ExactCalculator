@@ -1,6 +1,22 @@
 
+def Help_message() -> str:
+    return """
+Internal Commands:
+ - /exit, /quit: Exit the program
+ - /help : Show this help message
+ - /set_significance : Opens the menu to set the maximum significant digits for calculations
+ - /graph <function : str> : Graph the specified function (use variable 'x')
+ - /func : See the documentation for supported functions and syntax
+ - /clear : Clear the console
+ - /save <file : str> : Save the current state of all variables to a file
+ - /load <file : str> : Load variables from a file
+ - /get_all : Print all variables and their values
+ - /delete <variable_name : str> : Delete a variable from memory
+"""
 
-def Help_Text() -> str:
+
+
+def Help_functions() -> str:
     return """
 ---- Exact Calculator Help ----
 - Constants:

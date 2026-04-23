@@ -72,12 +72,12 @@ class GraphWindow:
         self.y_size = (-self.height//10/10, self.height//10/10)
         self.Prepare_graph_drawing()
 
+        pygame.init()
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
         pygame.display.set_caption("Graph Window")
 
     def start(self) -> None:
         running: bool = True
-        pygame.init()
         while running:
             self.Resize_check()
 
@@ -102,6 +102,7 @@ class GraphWindow:
             pygame.display.flip()
             self.clock.tick(60) # Limit to 60 FPS
 
+        self.screen = None
         pygame.quit()
 
 
@@ -173,6 +174,7 @@ class GraphWindow:
                     if prev_y_value is not None:
                         prev_screen_coords: tuple[int, int] = self.XY_to_screen(prev_x_value, prev_y_value, x_size, y_size)
                         if (0 <= prev_screen_coords[0] < self.width and 0 <= prev_screen_coords[1] < self.height) or (0 <= screen_coords[0] < self.width and 0 <= screen_coords[1] < self.height):
+                            # pygame.draw.line(self.screen, self.Get_lighter_color_variant(color), prev_screen_coords, screen_coords, 4)
                             pygame.draw.line(self.screen, color, prev_screen_coords, screen_coords, 2)
 
         self.Draw_legend()
@@ -198,7 +200,7 @@ class GraphWindow:
         legend_texts: list[pygame.Surface] = []
         max_text_width: int = 0
         for func in self.functions:
-            text_surface: pygame.Surface = font.render(func, True, (15, 15, 15))
+            text_surface: pygame.Surface = font.render(f"y = {func}", True, (15, 15, 15))
             legend_texts.append(text_surface)
             if text_surface.get_width() > max_text_width:
                 max_text_width = text_surface.get_width()
@@ -362,11 +364,13 @@ class GraphWindow:
         y_span: float = y_size[1] - y_size[0]
         if abs(x_span) < 1e-12:
             x_span = 1e-12
+            print("Warning: x_span is too small, adjusted to avoid division by zero.")
         if abs(y_span) < 1e-12:
             y_span = 1e-12
+            print("Warning: y_span is too small, adjusted to avoid division by zero.")
 
-        screen_x: int = int((x - x_size[0]) / x_span * self.width)
-        screen_y: int = int((y_size[1] - y) / y_span * self.height)
+        screen_x: int = round((x - x_size[0]) / x_span * self.width)
+        screen_y: int = round((y_size[1] - y) / y_span * self.height)
         return (screen_x, screen_y)
 
     def Draw_calculating_overlay(self) -> None:
@@ -408,6 +412,12 @@ class GraphWindow:
         if func_i >= len(colors):
             result = (result[0] // (func_i // len(colors)+1), result[1] // (func_i // len(colors)+1), result[2] // (func_i // len(colors)+1)) # Darken the color for higher indices
         return result
+        
+
+    def Get_lighter_color_variant(self, color: tuple[int, int, int]) -> tuple[int, int, int]:
+        adjustment: int = 100
+        return (min(color[0]+adjustment, 255), min(color[1]+adjustment, 255), min(color[2]+adjustment, 255))
+        
         
 
 

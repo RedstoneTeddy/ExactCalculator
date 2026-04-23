@@ -28,7 +28,7 @@ public:
 
 
     double GetAsDouble();
-    std::string GetAsString();
+    std::string GetAsString(bool useScientific = true);
 
 protected:
     // Numbers are stored like they would be scientifically written, one digit per entry, first digit is before the decimal point, the others are behind.

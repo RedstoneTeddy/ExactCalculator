@@ -65,16 +65,28 @@ public:
         LastResult = Calculate_num(input);
     }
 
-    double Calculate_double() {
+    double CalculateDouble() {
         return LastResult.GetAsDouble();
     }
 
-    std::string Calculate_string() {
+    std::string CalculateScientificString() {
+        return LastResult.GetAsString(true);
+    }
+
+    std::string CalculateString() {
         return LastResult.GetAsString();
     }
 
     std::string GetLastError() {
         return LastError;
+    }
+
+    std::vector<std::string> GetVariableNames() {
+        return calc.GetVariableNames();
+    }
+
+    void DeleteVariable(std::string name) {
+        calc.DeleteVariable(name);
     }
 
 private:
@@ -142,6 +154,9 @@ PYBIND11_MODULE(cpp_main, handle) {
     .def_property("RootSignificance", &Calculator::GetRootSignificant, &Calculator::SetRootSignificant)
     .def("Calculate", &Calculator::Calculate)
     .def("Get_last_error", &Calculator::GetLastError)
-    .def("Calculate_double", &Calculator::Calculate_double)
-    .def("Calculate_string", &Calculator::Calculate_string);
+    .def("Calculate_double", &Calculator::CalculateDouble)
+    .def("Calculate_scientific_string", &Calculator::CalculateScientificString)
+    .def("Calculate_string", &Calculator::CalculateString)
+    .def("Get_variable_names", &Calculator::GetVariableNames)
+    .def("Delete_variable", &Calculator::DeleteVariable);
 }

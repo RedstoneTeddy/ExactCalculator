@@ -5,6 +5,23 @@ import time
 import os
 
 
+def _format_decimal_literal(value: float) -> str:
+    """Format a float as a plain decimal string without scientific notation."""
+    literal: str = f"{abs(value):.17f}".rstrip("0").rstrip(".")
+    if literal == "":
+        return "0"
+    return literal
+
+
+def _build_x_assignment(value: float) -> str:
+    """Build a calculator-safe assignment for x that preserves negative values."""
+    decimal_literal: str = _format_decimal_literal(value)
+    if value < 0:
+        # Use subtraction form to avoid relying on unary-minus tokenization.
+        return f"x = 0-({decimal_literal})"
+    return f"x = {decimal_literal}"
+
+
 
 def Calculate_graphs(func: list[str], timeout: float, x_values: list[float], significance: int) -> list[list[float | None]]:
     """
@@ -97,7 +114,7 @@ def __Threaded_calculation(func: list[str], x_values: list[float], significance:
     calc : cpp_main.Calculator = cpp_main.Calculator(significance)
     for func_num in range(len(func)):
         for i in range(len(x_values)):
-            calc.Calculate(f"x = {str(x_values[i]).replace('-', '_')}")
+            calc.Calculate(_build_x_assignment(x_values[i]))
             calc.Calculate(func[func_num])
             if calc.Get_last_error() != "":
                 result[func_num].append(None)
