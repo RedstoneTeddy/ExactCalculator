@@ -18,12 +18,49 @@
 #include "../functions/root.hpp"
 #include "../functions/trigonometric.hpp"
 #include "../functions/logarithmic.hpp"
+#include "../functions/sum.hpp"
+
 #include "../CalculationError.hpp"
+
 
 
 Calc_main::Calc_main() {
     // varNumbers and varNames are initialized as empty vectors by default
 }
+
+
+std::vector<Number> Calc_main::extractNumbers(int i, int openFunctionBracket, std::vector<std::unique_ptr<CalculationPart>>& calculation_parts) {
+    
+    std::vector<std::vector<std::unique_ptr<CalculationPart>>> subParts = extractSubCalculations(i, openFunctionBracket, calculation_parts);
+    
+    std::vector<Number> functionArguments;
+    for (std::vector<std::unique_ptr<CalculationPart>>& subPart : subParts) {
+        Number argumentValue = Calculate_part(subPart);
+        functionArguments.push_back(argumentValue);
+    }
+    return functionArguments;
+}
+
+std::vector<std::vector<std::unique_ptr<CalculationPart>>> Calc_main::extractSubCalculations(int i, int openFunctionBracket, std::vector<std::unique_ptr<CalculationPart>>& calculation_parts) {
+    std::vector<std::vector<std::unique_ptr<CalculationPart>>> subParts;
+    int currentSubCalculationIndex = 0;
+    subParts.push_back(std::vector<std::unique_ptr<CalculationPart>>());
+    for (int j = openFunctionBracket + 1; j < i; j++) {
+        std::unique_ptr<CalculationPart>& currentPart = calculation_parts[j];
+        if (CommaSeparator* commaSeparator = dynamic_cast<CommaSeparator*>(currentPart.get())) {
+            // Start a new sub-calculation for the next argument
+            currentSubCalculationIndex++;
+            subParts.push_back(std::vector<std::unique_ptr<CalculationPart>>());
+        } else {
+            // Add part to the current sub-calculation
+            subParts[currentSubCalculationIndex].push_back(std::move(currentPart));
+        }
+    }
+    
+    return subParts;
+}
+
+
 
 
 Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& calculation_parts) {
@@ -56,25 +93,8 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
 
 
-    // Replace all variables & constants with their values
-    for (int i = 0; i < calculation_parts.size(); i++) {
-        std::unique_ptr<CalculationPart>& part = calculation_parts[i];
-        if (Variable* variable = dynamic_cast<Variable*>(part.get())) {
-            variable->SetVectorPointers(&varNumbers, &varNames);
-            Number value = variable->GetValue();
-            value.CorrectForSignificance();
-            part = std::make_unique<Number>(value);
-        }
-        else if (Constant* constant = dynamic_cast<Constant*>(part.get())) {
-            Number value = constant->GetValue();
-            value.CorrectForSignificance();
-            part = std::make_unique<Number>(value);
-        }
-    }
 
-
-
-    // Handle functions: factorial
+    // Handle functions
     int openFunctionBracket = -1;
     int nestedFunctionCounter = 0;
 
@@ -82,6 +102,20 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
         if (args.size() != expected) {
             throw CalculationError("Function '" + functionName + "' requires exactly " + std::to_string(expected) + " argument(s).", ErrorType::SyntaxError);
         }
+    };
+
+    auto replaceFunctionCallWithResult = [&](std::unique_ptr<CalculationPart>& functionPart, const Number& result, int& closeBracketIndex) {
+        functionPart = std::make_unique<Number>(result);
+
+        // Remove the full "{...}" argument region, regardless of expression complexity.
+        const int removeCount = closeBracketIndex - openFunctionBracket + 1;
+        calculation_parts.erase(
+            calculation_parts.begin() + openFunctionBracket,
+            calculation_parts.begin() + openFunctionBracket + removeCount
+        );
+
+        // Continue scanning from the function result token.
+        closeBracketIndex = openFunctionBracket - 1;
     };
 
     for (int i = 0; i < calculation_parts.size(); i++) {
@@ -99,28 +133,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                         throw CalculationError("Found a closing function bracket without a matching opening bracket.", ErrorType::SyntaxError);
                     }
 
-                    if (openFunctionBracket != -1 && nestedFunctionCounter == 0) {
-                        // Calculate the result of the inputs for the function
-                        std::vector<std::vector<std::unique_ptr<CalculationPart>>> subParts;
-                        int currentSubCalculationIndex = 0;
-                        subParts.push_back(std::vector<std::unique_ptr<CalculationPart>>());
-                        for (int j = openFunctionBracket + 1; j < i; j++) {
-                            std::unique_ptr<CalculationPart>& currentPart = calculation_parts[j];
-                            if (CommaSeparator* commaSeparator = dynamic_cast<CommaSeparator*>(currentPart.get())) {
-                                // Start a new sub-calculation for the next argument
-                                currentSubCalculationIndex++;
-                                subParts.push_back(std::vector<std::unique_ptr<CalculationPart>>());
-                            } else {
-                                // Add part to the current sub-calculation
-                                subParts[currentSubCalculationIndex].push_back(std::move(currentPart));
-                            }
-                        }
-                        
-                        std::vector<Number> functionArguments;
-                        for (std::vector<std::unique_ptr<CalculationPart>>& subPart : subParts) {
-                            Number argumentValue = Calculate_part(subPart);
-                            functionArguments.push_back(argumentValue);
-                        }
+                    if (openFunctionBracket != -1 && nestedFunctionCounter == 0) {                        
 
                         // Check which function it is and calculate accordingly
                         if (openFunctionBracket > 0) {
@@ -128,145 +141,102 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                             
                             // Factorial
                             if (Factorial* factorial = dynamic_cast<Factorial*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 1, "Factorial");
                                 Number result = factorial->Calculate(functionArguments[0]);
-
-                                // Replace function part with result, remove brackets and inner parts
-                                functionPart = std::make_unique<Number>(result);
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                i -= 3; // Move back index to account for removed parts
+                                replaceFunctionCallWithResult(functionPart, result, i);
                             }
 
                             // Square root
                             else if (SquareRoot* squareRoot = dynamic_cast<SquareRoot*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 1, "Sqrt");
                                 Number result = squareRoot->Calculate(functionArguments[0]);
-
-                                // Replace function part with result, remove brackets and inner parts
-                                functionPart = std::make_unique<Number>(result);
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                i -= 3; // Move back index to account for removed parts
+                                replaceFunctionCallWithResult(functionPart, result, i);
                             }
 
                             // Sine
                             else if (Sine* sine = dynamic_cast<Sine*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 1, "Sin");
                                 Number result = sine->Calculate(functionArguments[0]);
-
-                                // Replace function part with result, remove brackets and inner parts
-                                functionPart = std::make_unique<Number>(result);
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                i -= 3; // Move back index to account for removed parts
+                                replaceFunctionCallWithResult(functionPart, result, i);
                             }
 
                             // Cosine
                             else if (Cosine* cosine = dynamic_cast<Cosine*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 1, "Cos");
                                 Number result = cosine->Calculate(functionArguments[0]);
-
-                                // Replace function part with result, remove brackets and inner parts
-                                functionPart = std::make_unique<Number>(result);
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                i -= 3; // Move back index to account for removed parts
+                                replaceFunctionCallWithResult(functionPart, result, i);
                             }
 
                             // Tangent
                             else if (Tangent* tangent = dynamic_cast<Tangent*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 1, "Tan");
                                 Number result = tangent->Calculate(functionArguments[0]);
-
-                                // Replace function part with result, remove brackets and inner parts
-                                functionPart = std::make_unique<Number>(result);
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                i -= 3; // Move back index to account for removed parts
+                                replaceFunctionCallWithResult(functionPart, result, i);
                             }
 
                             // Arc sine
                             else if (ArcSine* arcSine = dynamic_cast<ArcSine*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 1, "Asin");
                                 Number result = arcSine->Calculate(functionArguments[0]);
-
-                                functionPart = std::make_unique<Number>(result);
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                i -= 3;
+                                replaceFunctionCallWithResult(functionPart, result, i);
                             }
 
                             // Arc cosine
                             else if (ArcCosine* arcCosine = dynamic_cast<ArcCosine*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 1, "Acos");
                                 Number result = arcCosine->Calculate(functionArguments[0]);
-
-                                functionPart = std::make_unique<Number>(result);
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                i -= 3;
+                                replaceFunctionCallWithResult(functionPart, result, i);
                             }
 
                             // Arc tangent
                             else if (ArcTangent* arcTangent = dynamic_cast<ArcTangent*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 1, "Atan");
                                 Number result = arcTangent->Calculate(functionArguments[0]);
-
-                                functionPart = std::make_unique<Number>(result);
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                i -= 3;
+                                replaceFunctionCallWithResult(functionPart, result, i);
                             }
 
                             // Natural logarithm
                             else if (NaturalLogarithm* naturalLogarithm = dynamic_cast<NaturalLogarithm*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 1, "Ln");
                                 Number result = naturalLogarithm->Calculate(functionArguments[0]);
-
-                                functionPart = std::make_unique<Number>(result);
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                i -= 3;
+                                replaceFunctionCallWithResult(functionPart, result, i);
                             }
 
                             // Logarithm with base
                             else if (Logarithm* logarithm = dynamic_cast<Logarithm*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 2, "Log");
                                 Number result = logarithm->Calculate(functionArguments[0], functionArguments[1]);
-
-                                functionPart = std::make_unique<Number>(result);
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                i -= 5;
+                                replaceFunctionCallWithResult(functionPart, result, i);
                             }
 
                             // n-th Root
                             else if (Root* root = dynamic_cast<Root*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 2, "Root");
                                 Number result = root->Calculate(functionArguments[0], functionArguments[1]);
-
-                                // Replace function part with result, remove brackets and inner parts
-                                functionPart = std::make_unique<Number>(result);
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove open bracket
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                calculation_parts.erase(calculation_parts.begin() + openFunctionBracket); // Remove close bracket    
-                                i -= 5; // Move back index to account for removed parts
+                                replaceFunctionCallWithResult(functionPart, result, i);
                             }
+
+                            // Sum
+                            else if (Sum* sum = dynamic_cast<Sum*>(functionPart.get())) {
+                                std::vector<std::vector<std::unique_ptr<CalculationPart>>> subCalculations = extractSubCalculations(i, openFunctionBracket, calculation_parts);
+                                if (subCalculations.size() != 3) {
+                                    throw CalculationError("Function 'Sum' requires exactly 3 arguments, example: Sum{i=1,10,i^2}", ErrorType::SyntaxError);
+                                }
+                                Number result = sum->Calculate(subCalculations[0], subCalculations[1], subCalculations[2], *this);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
                             else {
                                 throw CalculationError("Function brackets must follow a valid function name.", ErrorType::SyntaxError);
                             }
@@ -284,6 +254,26 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
     if (nestedFunctionCounter != 0) {
         throw CalculationError("A function call is missing a closing bracket.", ErrorType::SyntaxError);
     }
+
+
+    
+
+    // Replace all variables & constants with their values
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        std::unique_ptr<CalculationPart>& part = calculation_parts[i];
+        if (Variable* variable = dynamic_cast<Variable*>(part.get())) {
+            variable->SetVectorPointers(&varNumbers, &varNames);
+            Number value = variable->GetValue();
+            value.CorrectForSignificance();
+            part = std::make_unique<Number>(value);
+        }
+        else if (Constant* constant = dynamic_cast<Constant*>(part.get())) {
+            Number value = constant->GetValue();
+            value.CorrectForSignificance();
+            part = std::make_unique<Number>(value);
+        }
+    }
+
 
 
 

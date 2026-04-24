@@ -15,6 +15,7 @@
 #include "functions/constants.hpp"
 #include "functions/factorial.hpp"
 #include "functions/root.hpp"
+#include "functions/sum.hpp"
 #include "functions/trigonometric.hpp"
 #include "functions/logarithmic.hpp"
 
@@ -162,6 +163,12 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
         else if (currentPart == "Root") {
             Root r;
             parts.push_back(std::make_unique<Root>(r));
+        }
+
+        // Sum
+        else if (currentPart == "Sum") {
+            Sum sum;
+            parts.push_back(std::make_unique<Sum>(sum));
         }
 
         // Sine

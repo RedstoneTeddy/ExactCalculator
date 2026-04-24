@@ -108,5 +108,3 @@ while True:
 
 
 
-
-# Add a function which solves equations by bounds.

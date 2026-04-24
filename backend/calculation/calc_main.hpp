@@ -17,11 +17,16 @@
 #include "../functions/factorial.hpp"
 
 
+
+
 class Calc_main {
 private:
     std::vector<Number> varNumbers;
     std::vector<std::string> varNames;
 public:
+    std::vector<Number> extractNumbers(int i, int openFunctionBracket, std::vector<std::unique_ptr<CalculationPart>>& calculation_parts);
+    std::vector<std::vector<std::unique_ptr<CalculationPart>>> extractSubCalculations(int i, int openFunctionBracket, std::vector<std::unique_ptr<CalculationPart>>& calculation_parts);
+
     Number Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& calculation_parts);
     Calc_main();
     
