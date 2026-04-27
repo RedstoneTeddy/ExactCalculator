@@ -18,7 +18,7 @@ GWindow : GraphWindow = GraphWindow()
 
 print("\n---- Exact Calculator ----")
 print(" - /exit, /quit: Exit the program")
-print(" - /help : Show this help message")
+print(" - /help : Show all internal commands")
 
 print("")
 
@@ -36,18 +36,20 @@ while True:
         continue
 
     if user_input.startswith("/save"):
-        filename: str = user_input.split(" ", 1)[1] if len(user_input.split(" ", 1)) > 1 else "session.dat"
+        filename: str = user_input.split(" ", 1)[1] if len(user_input.split(" ", 1)) > 1 else "session.json"
         session_handler.Save_session(calc, filename)
         print(f"Session saved to {filename}\n")
         continue
 
     if user_input.startswith("/load"):
-        filename = user_input.split(" ", 1)[1] if len(user_input.split(" ", 1)) > 1 else "session.dat"
+        filename = user_input.split(" ", 1)[1] if len(user_input.split(" ", 1)) > 1 else "session.json"
         try:
             session_handler.Load_session(calc, filename)
             print(f"Session loaded from {filename}\n")
         except FileNotFoundError:
             print(f"File {filename} not found.\n")
+        except ValueError as error:
+            print(f"Invalid session file '{filename}': {error}\n")
         continue
 
     if user_input.startswith("/set_significance"):

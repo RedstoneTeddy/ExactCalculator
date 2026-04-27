@@ -8,8 +8,8 @@ Internal Commands:
  - /graph <function : str> : Graph the specified function (use variable 'x')
  - /func : See the documentation for supported functions and syntax
  - /clear : Clear the console
- - /save <file : str> : Save the current state of all variables to a file
- - /load <file : str> : Load variables from a file
+ - /save <file : str> : Save the current state of all variables to a JSON file
+ - /load <file : str> : Load variables from a JSON file
  - /get_all : Print all variables and their values
  - /delete <variable_name : str> : Delete a variable from memory
 """
@@ -27,17 +27,18 @@ def Help_functions() -> str:
     - U  = 1.66...* 10^-27 (Atomic mass unit)
 
 - Supported functions:
-    - fac{n}       : Factorial of n (e.g., fac{5} = 120)
-    - sqrt{n}      : Square root of n (e.g., sqrt{16} = 4)
-    - root{n, x}   : n-th root of x (e.g., root{3, 27} = 3)
-    - sin{n}       : Sine of n (e.g., sin{Pi/2} = 1)
-    - cos{n}       : Cosine of n (e.g., cos{Pi} = -1)
-    - tan{n}       : Tangent of n (e.g., tan{Pi/4} = 1)
-    - asin{n}      : Arc sine of n (e.g., asin{1} = Pi/2)
-    - acos{n}      : Arc cosine of n (e.g., acos{0} = Pi/2)
-    - atan{n}      : Arc tangent of n (e.g., atan{1} = Pi/4)
-    - ln{n}        : Natural logarithm of n (e.g., ln{E} = 1)
-    - log{b, n}    : Logarithm of n to base b (e.g., log{10, 100} = 2)
-    - sum{a, b, f} : Summation of f from a to b (e.g., sum{i=1, 5, i^2} = 55)
+    - Fac{n}       : Factorial of n (e.g., Fac{5} = 120)
+    - Sqrt{n}      : Square root of n (e.g., Sqrt{16} = 4)
+    - Root{n, x}   : n-th root of x (e.g., Root{3, 27} = 3)
+    - Sin{n}       : Sine of n (e.g., Sin{Pi/2} = 1)
+    - Cos{n}       : Cosine of n (e.g., Cos{Pi} = -1)
+    - Tan{n}       : Tangent of n (e.g., Tan{Pi/4} = 1)
+    - Asin{n}      : Arc sine of n (e.g., Asin{1} = Pi/2)
+    - Acos{n}      : Arc cosine of n (e.g., Acos{0} = Pi/2)
+    - Atan{n}      : Arc tangent of n (e.g., Atan{1} = Pi/4)
+    - Ln{n}        : Natural logarithm of n (e.g., Ln{E} = 1)
+    - Log{b, n}    : Logarithm of n to base b (e.g., Log{10, 100} = 2)
+    - Sum{a, b, f} : Summation of f from a to b (e.g., Sum{i=1, 5, i^2} = 55)
+    - Prod{a, b, f}: Product of f from a to b (e.g., Prod{i=1, 5, i} = 120)
 
 """

@@ -1,22 +1,23 @@
 #include "clone_parts.hpp"
 
-#include "../CalculationError.hpp"
+#include "CalculationError.hpp"
 
-#include "number.hpp"
-#include "variables.hpp"
-#include "addition.hpp"
-#include "subtraction.hpp"
-#include "multiplication.hpp"
-#include "division.hpp"
-#include "exponent.hpp"
-#include "equal_sign.hpp"
+#include "calculation/number.hpp"
+#include "calculation/variables.hpp"
+#include "calculation/addition.hpp"
+#include "calculation/subtraction.hpp"
+#include "calculation/multiplication.hpp"
+#include "calculation/division.hpp"
+#include "calculation/exponent.hpp"
+#include "calculation/equal_sign.hpp"
 
-#include "../functions/constants.hpp"
-#include "../functions/factorial.hpp"
-#include "../functions/root.hpp"
-#include "../functions/trigonometric.hpp"
-#include "../functions/logarithmic.hpp"
-#include "../functions/sum.hpp"
+#include "functions/constants.hpp"
+#include "functions/factorial.hpp"
+#include "functions/root.hpp"
+#include "functions/trigonometric.hpp"
+#include "functions/logarithmic.hpp"
+#include "functions/sum.hpp"
+#include "functions/product.hpp"
 
 std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& part) {
     if (const Number* number = dynamic_cast<const Number*>(&part)) {
@@ -87,6 +88,9 @@ std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& par
     }
     if (const Sum* sum = dynamic_cast<const Sum*>(&part)) {
         return std::make_unique<Sum>(*sum);
+    }
+    if (const Product* product = dynamic_cast<const Product*>(&part)) {
+        return std::make_unique<Product>(*product);
     }
 
     throw CalculationError("Internal error: unsupported token in expression cloning.", ErrorType::SyntaxError);

@@ -224,7 +224,7 @@ std::string Number::GetAsString(bool useScientific) {
     }
 
     // Scientific notation
-    if (useScientific && (exponent > -7 && exponent < 7)) {
+    if (useScientific && (exponent > 7 || exponent < -7)) {
         for (int i = 0; i < digits.size(); i++) {
             if (i == 1) {
                 result += ".";
@@ -248,7 +248,7 @@ std::string Number::GetAsString(bool useScientific) {
             }
             currentExponent--;
         }
-        while (currentExponent > 0) {
+        while (currentExponent >= 0) {
             result += "0";
             currentExponent--;
         }

@@ -14,7 +14,7 @@ pybind11_add_module(cpp_main
 	backend/calculation/number.cpp
 	backend/calculation/calc_main.cpp
 	backend/calculation/variables.cpp
-	backend/calculation/clone_parts.cpp
+	backend/clone_parts.cpp
 
 	backend/functions/constants.cpp
 	backend/functions/factorial.cpp
@@ -22,6 +22,7 @@ pybind11_add_module(cpp_main
 	backend/functions/trigonometric.cpp
 	backend/functions/logarithmic.cpp
 	backend/functions/sum.cpp
+	backend/functions/product.cpp
 
 	backend/calculation/compare.cpp
 	backend/calculation/addition.cpp

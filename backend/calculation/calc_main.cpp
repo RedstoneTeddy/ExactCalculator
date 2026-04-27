@@ -19,6 +19,7 @@
 #include "../functions/trigonometric.hpp"
 #include "../functions/logarithmic.hpp"
 #include "../functions/sum.hpp"
+#include "../functions/product.hpp"
 
 #include "../CalculationError.hpp"
 
@@ -236,6 +237,17 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                                 Number result = sum->Calculate(subCalculations[0], subCalculations[1], subCalculations[2], *this);
                                 replaceFunctionCallWithResult(functionPart, result, i);
                             }
+                            
+                            // Product
+                            else if (Product* product = dynamic_cast<Product*>(functionPart.get())) {
+                                std::vector<std::vector<std::unique_ptr<CalculationPart>>> subCalculations = extractSubCalculations(i, openFunctionBracket, calculation_parts);
+                                if (subCalculations.size() != 3) {
+                                    throw CalculationError("Function 'Product' requires exactly 3 arguments, example: Product{i=1,10,i}", ErrorType::SyntaxError);
+                                }
+                                Number result = product->Calculate(subCalculations[0], subCalculations[1], subCalculations[2], *this);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+                            
 
                             else {
                                 throw CalculationError("Function brackets must follow a valid function name.", ErrorType::SyntaxError);

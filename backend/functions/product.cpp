@@ -1,4 +1,4 @@
-#include "sum.hpp"
+#include "product.hpp"
 
 
 #include "../CalculationError.hpp"
@@ -9,6 +9,7 @@
 
 #include "../calculation/subtraction.hpp"
 #include "../calculation/addition.hpp"
+#include "../calculation/multiplication.hpp"
 #include "../calculation/equal_sign.hpp"
 #include "../calculation/variables.hpp"
 
@@ -17,7 +18,7 @@
 #include <limits>
 
 
-Number Sum::Calculate(
+Number Product::Calculate(
     std::vector<std::unique_ptr<CalculationPart>>& from,
     std::vector<std::unique_ptr<CalculationPart>>& to,
     std::vector<std::unique_ptr<CalculationPart>>& formula,
@@ -33,21 +34,23 @@ Number Sum::Calculate(
         Number toValue = calc_main.Calculate_part(to);
 
         Number result(fromValue.GetMaxSignificant());
+        result.SetNumber(false, {1}, 0); // Initialize result to 1 for multiplication
 
         fromValue.CorrectForSignificance();
         toValue.CorrectForSignificance();
 
         // Check if from and to values have after-comma-digits
         if ((fromValue.GetExponent() - fromValue.GetDigits().size()) < 0) {
-            throw CalculationError("The 'from' value in the Sum function cannot have after-comma digits.", ErrorType::SyntaxError);
+            throw CalculationError("The 'from' value in the Product function cannot have after-comma digits.", ErrorType::SyntaxError);
         }
         if ((toValue.GetExponent() - toValue.GetDigits().size()) < 0) {
-            throw CalculationError("The 'to' value in the Sum function cannot have after-comma digits.", ErrorType::SyntaxError);
+            throw CalculationError("The 'to' value in the Product function cannot have after-comma digits.", ErrorType::SyntaxError);
         }
 
         // Calculate number of iterations
         Subtraction sub;
         Addition add;
+        Multiplication mul;
 
         Number NumOne(fromValue.GetMaxSignificant());
         NumOne.SetNumber(false, {1}, 0);
@@ -56,13 +59,13 @@ Number Sum::Calculate(
 
         // Check if iterations is a non-negative integer
         if (iterations.GetIsNegative() || (iterations.GetExponent() - iterations.GetDigits().size()) < 0) {
-            throw CalculationError("The number of iterations in the Sum function must be a non-negative integer. Check the 'from' and 'to' values.", ErrorType::SyntaxError);
+            throw CalculationError("The number of iterations in the Product function must be a non-negative integer. Check the 'from' and 'to' values.", ErrorType::SyntaxError);
         }
 
         long long iterationsLL = 0;
         for (int digit : iterations.GetDigits()) {
             if (iterationsLL > (std::numeric_limits<long long>::max() - digit) / 10) {
-                throw CalculationError("The number of iterations in the Sum function is too large.", ErrorType::SyntaxError);
+                throw CalculationError("The number of iterations in the Product function is too large.", ErrorType::SyntaxError);
             }
             iterationsLL = iterationsLL * 10 + digit;
         }
@@ -70,21 +73,21 @@ Number Sum::Calculate(
         const int trailingZeros = iterations.GetExponent() + 1 - static_cast<int>(iterations.GetDigits().size());
         for (int i = 0; i < trailingZeros; i++) {
             if (iterationsLL > std::numeric_limits<long long>::max() / 10) {
-                throw CalculationError("The number of iterations in the Sum function is too large.", ErrorType::SyntaxError);
+                throw CalculationError("The number of iterations in the Product function is too large.", ErrorType::SyntaxError);
             }
             iterationsLL *= 10;
         }
 
         if (iterationsLL > std::numeric_limits<int>::max()) {
-            throw CalculationError("The number of iterations in the Sum function is too large.", ErrorType::SyntaxError);
+            throw CalculationError("The number of iterations in the Product function is too large.", ErrorType::SyntaxError);
         }
         int iterationsInt = static_cast<int>(iterationsLL);
 
-        // Calculate sum
+        // Calculate product
         for (int i = 0; i < iterationsInt; i++) {
             std::vector<std::unique_ptr<CalculationPart>> currentFormula = CloneCalculationParts(formulaTemplate);
             Number currentCalculatedValue = calc_main.Calculate_part(currentFormula);
-            result = add.Calculate(result, currentCalculatedValue);
+            result = mul.Calculate(result, currentCalculatedValue);
 
             // Increment variable
             std::vector<std::unique_ptr<CalculationPart>> incrementParts;
@@ -98,7 +101,7 @@ Number Sum::Calculate(
 
         return result;
     } else {
-        throw CalculationError("The first argument of the Sum function must be a variable assignment, e.g., i=1.", ErrorType::SyntaxError);
+        throw CalculationError("The first argument of the Product function must be a variable assignment, e.g., i=1.", ErrorType::SyntaxError);
     }
 }
 

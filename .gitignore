@@ -1,4 +1,4 @@
 .mypy_cache/
 build/
 frontend/__pycache__/
-session.dat
+session.json

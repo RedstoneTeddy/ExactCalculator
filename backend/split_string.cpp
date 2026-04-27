@@ -16,6 +16,7 @@
 #include "functions/factorial.hpp"
 #include "functions/root.hpp"
 #include "functions/sum.hpp"
+#include "functions/product.hpp"
 #include "functions/trigonometric.hpp"
 #include "functions/logarithmic.hpp"
 
@@ -169,6 +170,12 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
         else if (currentPart == "Sum") {
             Sum sum;
             parts.push_back(std::make_unique<Sum>(sum));
+        }
+
+        // Product
+        else if (currentPart == "Product" || currentPart == "Prod") {
+            Product product;
+            parts.push_back(std::make_unique<Product>(product));
         }
 
         // Sine
