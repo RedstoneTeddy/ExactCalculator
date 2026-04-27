@@ -26,6 +26,9 @@ def Help_functions() -> str:
     - C  = 299792458       (Speed of light in m/s)
     - U  = 1.66...* 10^-27 (Atomic mass unit)
 
+- Other information:
+    - You can use the variable 'ans' to access the result of the last calculation.
+
 - Supported functions:
     - Fac{n}       : Factorial of n (e.g., Fac{5} = 120)
     - Sqrt{n}      : Square root of n (e.g., Sqrt{16} = 4)
@@ -40,5 +43,7 @@ def Help_functions() -> str:
     - Log{b, n}    : Logarithm of n to base b (e.g., Log{10, 100} = 2)
     - Sum{a, b, f} : Summation of f from a to b (e.g., Sum{i=1, 5, i^2} = 55)
     - Prod{a, b, f}: Product of f from a to b (e.g., Prod{i=1, 5, i} = 120)
+    - Min{a, b}    : Minimum of a and b (e.g., Min{3, 5} = 3)
+    - Max{a, b}    : Maximum of a and b (e.g., Max{3, 5} = 5)
 
 """

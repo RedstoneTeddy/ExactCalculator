@@ -20,6 +20,7 @@
 #include "../functions/logarithmic.hpp"
 #include "../functions/sum.hpp"
 #include "../functions/product.hpp"
+#include "../functions/minmax.hpp"
 
 #include "../CalculationError.hpp"
 
@@ -86,7 +87,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
 
                 // Store the result in the variable
-                SetVariable(variable->GetName(), subResult, &varNumbers, &varNames);
+                VARIABLES_HPP::SetVariable(variable->GetName(), subResult, &varNumbers, &varNames);
                 return subResult;
             }
         }
@@ -245,6 +246,20 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                                     throw CalculationError("Function 'Product' requires exactly 3 arguments, example: Product{i=1,10,i}", ErrorType::SyntaxError);
                                 }
                                 Number result = product->Calculate(subCalculations[0], subCalculations[1], subCalculations[2], *this);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
+                            else if (Min* min = dynamic_cast<Min*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 2, "Min");
+                                Number result = min->Calculate(functionArguments[0], functionArguments[1]);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
+                            else if (Max* max = dynamic_cast<Max*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 2, "Max");
+                                Number result = max->Calculate(functionArguments[0], functionArguments[1]);
                                 replaceFunctionCallWithResult(functionPart, result, i);
                             }
                             

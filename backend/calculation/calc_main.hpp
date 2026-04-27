@@ -34,6 +34,18 @@ public:
         return varNames;
     }
 
+    void SetVariable(std::string name, Number value) {
+        auto it = std::find(varNames.begin(), varNames.end(), name);
+        if (it != varNames.end()) {
+            size_t index = std::distance(varNames.begin(), it);
+            varNumbers[index] = value;
+        }
+        else {
+            varNames.push_back(name);
+            varNumbers.push_back(value);
+        }
+    }
+
     void DeleteVariable(std::string name) {
         auto it = std::find(varNames.begin(), varNames.end(), name);
         if (it != varNames.end()) {

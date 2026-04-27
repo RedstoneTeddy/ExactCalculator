@@ -110,6 +110,9 @@ private:
             
             result = calc.Calculate_part(calculation_parts);
 
+            // Store the result in the variable ans
+            calc.SetVariable("ans", result);
+
             result = Exp_Round(result, finalSignificant);
         }
         catch (const CalculationError& e) {

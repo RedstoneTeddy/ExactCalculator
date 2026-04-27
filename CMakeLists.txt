@@ -32,6 +32,7 @@ pybind11_add_module(cpp_main
 	backend/calculation/exponent.cpp
 	
 	backend/CalculationError.hpp
+	backend/functions/minmax.cpp
 )
 
 # target_include_directories(cpp_main PRIVATE

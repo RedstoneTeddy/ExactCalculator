@@ -18,6 +18,7 @@
 #include "functions/logarithmic.hpp"
 #include "functions/sum.hpp"
 #include "functions/product.hpp"
+#include "functions/minmax.hpp"
 
 std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& part) {
     if (const Number* number = dynamic_cast<const Number*>(&part)) {
@@ -91,6 +92,12 @@ std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& par
     }
     if (const Product* product = dynamic_cast<const Product*>(&part)) {
         return std::make_unique<Product>(*product);
+    }
+    if (const Min* min = dynamic_cast<const Min*>(&part)) {
+        return std::make_unique<Min>(*min);
+    }
+    if (const Max* max = dynamic_cast<const Max*>(&part)) {
+        return std::make_unique<Max>(*max);
     }
 
     throw CalculationError("Internal error: unsupported token in expression cloning.", ErrorType::SyntaxError);

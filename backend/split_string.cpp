@@ -19,6 +19,7 @@
 #include "functions/product.hpp"
 #include "functions/trigonometric.hpp"
 #include "functions/logarithmic.hpp"
+#include "functions/minmax.hpp"
 
 #include "calculation/addition.hpp"
 #include "calculation/subtraction.hpp"
@@ -224,6 +225,18 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
         else if (currentPart == "Ln" || currentPart == "NaturalLog" || currentPart == "NaturalLogarithm") {
             NaturalLogarithm naturalLogarithm;
             parts.push_back(std::make_unique<NaturalLogarithm>(naturalLogarithm));
+        }
+
+        // Min
+        else if (currentPart == "Min") {
+            Min min;
+            parts.push_back(std::make_unique<Min>(min));
+        }
+
+        // Max
+        else if (currentPart == "Max") {
+            Max max;
+            parts.push_back(std::make_unique<Max>(max));
         }
 
         // Treat unknown functions as variables, so they can be defined by the user
