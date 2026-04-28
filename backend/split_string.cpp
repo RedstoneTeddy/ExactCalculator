@@ -20,6 +20,8 @@
 #include "functions/trigonometric.hpp"
 #include "functions/logarithmic.hpp"
 #include "functions/minmax.hpp"
+#include "functions/combinatorics.hpp"
+#include "functions/round.hpp"
 
 #include "calculation/addition.hpp"
 #include "calculation/subtraction.hpp"
@@ -237,6 +239,36 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
         else if (currentPart == "Max") {
             Max max;
             parts.push_back(std::make_unique<Max>(max));
+        }
+
+        // nPr
+        else if (currentPart == "Npr" || currentPart == "NPr" || currentPart == "Perm") {
+            nPr npr;
+            parts.push_back(std::make_unique<nPr>(npr));
+        }
+
+        // nCr
+        else if (currentPart == "Ncr" || currentPart == "NCr" || currentPart == "Choose") {
+            nCr ncr;
+            parts.push_back(std::make_unique<nCr>(ncr));
+        }
+
+        // Round
+        else if (currentPart == "Round") {
+            Round round;
+            parts.push_back(std::make_unique<Round>(round));
+        }
+
+        // Ceil
+        else if (currentPart == "Ceil") {
+            Ceil ceil;
+            parts.push_back(std::make_unique<Ceil>(ceil));
+        }
+
+        // Floor
+        else if (currentPart == "Floor") {
+            Floor floor;
+            parts.push_back(std::make_unique<Floor>(floor));
         }
 
         // Treat unknown functions as variables, so they can be defined by the user

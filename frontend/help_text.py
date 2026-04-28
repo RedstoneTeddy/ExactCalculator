@@ -45,5 +45,10 @@ def Help_functions() -> str:
     - Prod{a, b, f}: Product of f from a to b (e.g., Prod{i=1, 5, i} = 120)
     - Min{a, b}    : Minimum of a and b (e.g., Min{3, 5} = 3)
     - Max{a, b}    : Maximum of a and b (e.g., Max{3, 5} = 5)
+    - Perm{n, k}   : Permutations of n items taken k at a time (e.g., Perm{5, 2} = 20)
+    - Choose{n, k} : Combinations of n items taken k at a time (e.g., Choose{5, 2} = 10)
+    - Round{n}     : Round n to the nearest integer (e.g., Round{3.6} = 4)
+    - Ceil{n}      : Round n up to the nearest integer (e.g., Ceil{3.2} = 4)
+    - Floor{n}     : Round n down to the nearest integer (e.g., Floor{3.8} = 3)
 
 """

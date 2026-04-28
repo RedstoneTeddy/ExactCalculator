@@ -19,6 +19,8 @@
 #include "functions/sum.hpp"
 #include "functions/product.hpp"
 #include "functions/minmax.hpp"
+#include "functions/combinatorics.hpp"
+#include "functions/round.hpp"
 
 std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& part) {
     if (const Number* number = dynamic_cast<const Number*>(&part)) {
@@ -98,6 +100,21 @@ std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& par
     }
     if (const Max* max = dynamic_cast<const Max*>(&part)) {
         return std::make_unique<Max>(*max);
+    }
+    if (const nPr* npr = dynamic_cast<const nPr*>(&part)) {
+        return std::make_unique<nPr>(*npr);
+    }
+    if (const nCr* ncr = dynamic_cast<const nCr*>(&part)) {
+        return std::make_unique<nCr>(*ncr);
+    }
+    if (const Round* round = dynamic_cast<const Round*>(&part)) {
+        return std::make_unique<Round>(*round);
+    }
+    if (const Ceil* ceil = dynamic_cast<const Ceil*>(&part)) {
+        return std::make_unique<Ceil>(*ceil);
+    }
+    if (const Floor* floor = dynamic_cast<const Floor*>(&part)) {
+        return std::make_unique<Floor>(*floor);
     }
 
     throw CalculationError("Internal error: unsupported token in expression cloning.", ErrorType::SyntaxError);

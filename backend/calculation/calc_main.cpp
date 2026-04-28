@@ -21,6 +21,8 @@
 #include "../functions/sum.hpp"
 #include "../functions/product.hpp"
 #include "../functions/minmax.hpp"
+#include "../functions/combinatorics.hpp"
+#include "../functions/round.hpp"
 
 #include "../CalculationError.hpp"
 
@@ -260,6 +262,41 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                                 std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 2, "Max");
                                 Number result = max->Calculate(functionArguments[0], functionArguments[1]);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+                            
+                            else if (nPr* npr = dynamic_cast<nPr*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 2, "nPr");
+                                Number result = npr->Calculate(functionArguments[0], functionArguments[1]);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
+                            else if (nCr* ncr = dynamic_cast<nCr*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 2, "nCr");
+                                Number result = ncr->Calculate(functionArguments[0], functionArguments[1]);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
+                            else if (Round* round = dynamic_cast<Round*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 1, "Round");
+                                Number result = round->Calculate(functionArguments[0]);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
+                            else if (Ceil* ceil = dynamic_cast<Ceil*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 1, "Ceil");
+                                Number result = ceil->Calculate(functionArguments[0]);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
+                            else if (Floor* floor = dynamic_cast<Floor*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 1, "Floor");
+                                Number result = floor->Calculate(functionArguments[0]);
                                 replaceFunctionCallWithResult(functionPart, result, i);
                             }
                             

@@ -33,6 +33,8 @@ pybind11_add_module(cpp_main
 	
 	backend/CalculationError.hpp
 	backend/functions/minmax.cpp
+	backend/functions/combinatorics.cpp
+	backend/functions/round.cpp
 )
 
 # target_include_directories(cpp_main PRIVATE
