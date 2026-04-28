@@ -29,10 +29,12 @@ Number Round::Calculate(Number number) {
     }
 
     result.SetDigits(integerDigits);
+    result.CorrectForSignificance();
 
     if (firstDecimalDigit >= 5) {
         Number one(result.GetMaxSignificant());
         one.SetDigits({1});
+        one.SetNegative(number.GetIsNegative());
         result = add.Calculate(result, one);
     }
 
@@ -42,6 +44,7 @@ Number Round::Calculate(Number number) {
 
 Number Ceil::Calculate(Number number) {
     Number result(number.GetMaxSignificant());
+    bool wasNegative = number.GetIsNegative();
 
     result.SetNumber(number.GetIsNegative(), number.GetDigits(), number.GetExponent());
     result.CorrectForSignificance();
@@ -64,8 +67,9 @@ Number Ceil::Calculate(Number number) {
     }
 
     result.SetDigits(integerDigits);
+    result.CorrectForSignificance();
 
-    if (hasDecimalDigits && !result.GetIsNegative()) {
+    if (hasDecimalDigits && !wasNegative) {
         Number one(result.GetMaxSignificant());
         one.SetDigits({1});
         result = add.Calculate(result, one);
@@ -77,6 +81,9 @@ Number Ceil::Calculate(Number number) {
 
 Number Floor::Calculate(Number number) {
     Number result(number.GetMaxSignificant());
+    bool wasNegative = number.GetIsNegative();
+
+    Addition add;
 
     result.SetNumber(number.GetIsNegative(), number.GetDigits(), number.GetExponent());
     result.CorrectForSignificance();
@@ -93,6 +100,14 @@ Number Floor::Calculate(Number number) {
     }
 
     result.SetDigits(integerDigits);
+    result.CorrectForSignificance();
+
+    if (wasNegative && number.GetDigits().size() > integerDigits.size()) {
+        Number one(result.GetMaxSignificant());
+        one.SetDigits({1});
+        one.SetNegative(true);
+        result = add.Calculate(result, one);
+    }
 
     result.CorrectForSignificance();
     return result;

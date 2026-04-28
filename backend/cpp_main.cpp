@@ -70,11 +70,15 @@ public:
     }
 
     std::string CalculateScientificString() {
-        return LastResult.GetAsString(true);
+        Number rounded = LastResult;
+        rounded = Exp_Round(rounded, finalSignificant);
+        return rounded.GetAsString(true);
     }
 
     std::string CalculateString() {
-        return LastResult.GetAsString();
+        Number rounded = LastResult;
+        rounded = Exp_Round(rounded, finalSignificant);
+        return rounded.GetAsString();
     }
 
     std::string GetLastError() {
@@ -113,7 +117,6 @@ private:
             // Store the result in the variable ans
             calc.SetVariable("ans", result);
 
-            result = Exp_Round(result, finalSignificant);
         }
         catch (const CalculationError& e) {
             std::string errorTypeStr;

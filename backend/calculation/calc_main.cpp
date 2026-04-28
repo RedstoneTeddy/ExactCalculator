@@ -23,6 +23,7 @@
 #include "../functions/minmax.hpp"
 #include "../functions/combinatorics.hpp"
 #include "../functions/round.hpp"
+#include "../functions/boolean.hpp"
 
 #include "../CalculationError.hpp"
 
@@ -299,6 +300,13 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                                 Number result = floor->Calculate(functionArguments[0]);
                                 replaceFunctionCallWithResult(functionPart, result, i);
                             }
+
+                            else if (BooleanIf* ifFunction = dynamic_cast<BooleanIf*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 3, "If");
+                                Number result = ifFunction->Calculate(functionArguments[0], functionArguments[1], functionArguments[2]);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
                             
 
                             else {
@@ -383,6 +391,33 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
     }
 
     //  check if all Bracket-threads finished and returned their result, which will then get stored
+
+
+
+
+
+
+    // Handle !
+    for (int i = static_cast<int>(calculation_parts.size()) - 2; i >= 0; i--) {
+        std::unique_ptr<CalculationPart>& part = calculation_parts[i];
+        if (BooleanNot* booleanNot = dynamic_cast<BooleanNot*>(part.get())) {
+            std::unique_ptr<CalculationPart>& rightPart = calculation_parts[i + 1];
+            Number* rightNum = dynamic_cast<Number*>(rightPart.get());
+            if (!rightNum) {
+                throw CalculationError("The right operand of the logical NOT operator (!) must be a number.", ErrorType::SyntaxError);
+            }
+
+            Number result = booleanNot->Calculate(*rightNum);
+            part = std::make_unique<Number>(result);
+            calculation_parts.erase(calculation_parts.begin() + i + 1);
+        }
+    }
+
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        if (dynamic_cast<BooleanNot*>(calculation_parts[i].get())) {
+            throw CalculationError("The logical NOT operator (!) could not be evaluated. Check that the operand is a valid number.", ErrorType::SyntaxError);
+        }
+    }
 
 
 
@@ -545,6 +580,210 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
         }
         if (dynamic_cast<Subtraction*>(calculation_parts[i].get())) {
             throw CalculationError("The subtraction operator (-) could not be evaluated. Check that both operands are valid numbers.", ErrorType::SyntaxError);
+        }
+    }
+
+
+
+
+
+
+    // Handle <, <=, > and >=
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        std::unique_ptr<CalculationPart>& part = calculation_parts[i];
+
+        if (i == 0 || i == calculation_parts.size() - 1) {
+            if (dynamic_cast<BooleanLess*>(part.get()) || dynamic_cast<BooleanLessEquals*>(part.get()) || dynamic_cast<BooleanGreater*>(part.get()) || dynamic_cast<BooleanGreaterEquals*>(part.get())) {
+                throw CalculationError("Comparison operators cannot appear at the beginning or end of an expression.", ErrorType::SyntaxError);
+            }
+            continue;
+        }
+
+        std::unique_ptr<CalculationPart>& leftPart = calculation_parts[i - 1];
+        std::unique_ptr<CalculationPart>& rightPart = calculation_parts[i + 1];
+        if (Number* leftNum = dynamic_cast<Number*>(leftPart.get())) {
+            if (Number* rightNum = dynamic_cast<Number*>(rightPart.get())) {
+                if (BooleanLess* less = dynamic_cast<BooleanLess*>(part.get())) {
+                    Number result = less->Calculate(*leftNum, *rightNum);
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    i--;
+                } else if (BooleanLessEquals* lessEquals = dynamic_cast<BooleanLessEquals*>(part.get())) {
+                    Number result = lessEquals->Calculate(*leftNum, *rightNum);
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    i--;
+                } else if (BooleanGreater* greater = dynamic_cast<BooleanGreater*>(part.get())) {
+                    Number result = greater->Calculate(*leftNum, *rightNum);
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    i--;
+                } else if (BooleanGreaterEquals* greaterEquals = dynamic_cast<BooleanGreaterEquals*>(part.get())) {
+                    Number result = greaterEquals->Calculate(*leftNum, *rightNum);
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    i--;
+                }
+            } else {
+                if (dynamic_cast<BooleanLess*>(part.get()) || dynamic_cast<BooleanLessEquals*>(part.get()) || dynamic_cast<BooleanGreater*>(part.get()) || dynamic_cast<BooleanGreaterEquals*>(part.get())) {
+                    throw CalculationError("A comparison operator requires numeric operands.", ErrorType::SyntaxError);
+                }
+            }
+        } else {
+            if (dynamic_cast<BooleanLess*>(part.get()) || dynamic_cast<BooleanLessEquals*>(part.get()) || dynamic_cast<BooleanGreater*>(part.get()) || dynamic_cast<BooleanGreaterEquals*>(part.get())) {
+                throw CalculationError("A comparison operator requires numeric operands.", ErrorType::SyntaxError);
+            }
+        }
+    }
+
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        if (dynamic_cast<BooleanLess*>(calculation_parts[i].get()) || dynamic_cast<BooleanLessEquals*>(calculation_parts[i].get()) || dynamic_cast<BooleanGreater*>(calculation_parts[i].get()) || dynamic_cast<BooleanGreaterEquals*>(calculation_parts[i].get())) {
+            throw CalculationError("A comparison operator could not be evaluated. Check that both operands are valid numbers.", ErrorType::SyntaxError);
+        }
+    }
+
+
+
+
+
+
+    // Handle == and !=
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        std::unique_ptr<CalculationPart>& part = calculation_parts[i];
+
+        if (i == 0 || i == calculation_parts.size() - 1) {
+            if (dynamic_cast<BooleanEquals*>(part.get()) || dynamic_cast<BooleanNotEquals*>(part.get())) {
+                throw CalculationError("Equality operators cannot appear at the beginning or end of an expression.", ErrorType::SyntaxError);
+            }
+            continue;
+        }
+
+        std::unique_ptr<CalculationPart>& leftPart = calculation_parts[i - 1];
+        std::unique_ptr<CalculationPart>& rightPart = calculation_parts[i + 1];
+        if (Number* leftNum = dynamic_cast<Number*>(leftPart.get())) {
+            if (Number* rightNum = dynamic_cast<Number*>(rightPart.get())) {
+                if (BooleanEquals* equals = dynamic_cast<BooleanEquals*>(part.get())) {
+                    Number result = equals->Calculate(*leftNum, *rightNum);
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    i--;
+                } else if (BooleanNotEquals* notEquals = dynamic_cast<BooleanNotEquals*>(part.get())) {
+                    Number result = notEquals->Calculate(*leftNum, *rightNum);
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    i--;
+                }
+            } else {
+                if (dynamic_cast<BooleanEquals*>(part.get()) || dynamic_cast<BooleanNotEquals*>(part.get())) {
+                    throw CalculationError("Equality operators require numeric operands.", ErrorType::SyntaxError);
+                }
+            }
+        } else {
+            if (dynamic_cast<BooleanEquals*>(part.get()) || dynamic_cast<BooleanNotEquals*>(part.get())) {
+                throw CalculationError("Equality operators require numeric operands.", ErrorType::SyntaxError);
+            }
+        }
+    }
+
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        if (dynamic_cast<BooleanEquals*>(calculation_parts[i].get()) || dynamic_cast<BooleanNotEquals*>(calculation_parts[i].get())) {
+            throw CalculationError("An equality operator could not be evaluated. Check that both operands are valid numbers.", ErrorType::SyntaxError);
+        }
+    }
+
+
+
+
+
+
+    // Handle &&
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        std::unique_ptr<CalculationPart>& part = calculation_parts[i];
+
+        if (i == 0 || i == calculation_parts.size() - 1) {
+            if (dynamic_cast<BooleanAnd*>(part.get())) {
+                throw CalculationError("The logical AND operator (&&) cannot appear at the beginning or end of an expression.", ErrorType::SyntaxError);
+            }
+            continue;
+        }
+
+        std::unique_ptr<CalculationPart>& leftPart = calculation_parts[i - 1];
+        std::unique_ptr<CalculationPart>& rightPart = calculation_parts[i + 1];
+        if (Number* leftNum = dynamic_cast<Number*>(leftPart.get())) {
+            if (Number* rightNum = dynamic_cast<Number*>(rightPart.get())) {
+                if (BooleanAnd* booleanAnd = dynamic_cast<BooleanAnd*>(part.get())) {
+                    Number result = booleanAnd->Calculate(*leftNum, *rightNum);
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    i--;
+                }
+            } else {
+                if (dynamic_cast<BooleanAnd*>(part.get())) {
+                    throw CalculationError("The logical AND operator (&&) requires numeric operands.", ErrorType::SyntaxError);
+                }
+            }
+        } else {
+            if (dynamic_cast<BooleanAnd*>(part.get())) {
+                throw CalculationError("The logical AND operator (&&) requires numeric operands.", ErrorType::SyntaxError);
+            }
+        }
+    }
+
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        if (dynamic_cast<BooleanAnd*>(calculation_parts[i].get())) {
+            throw CalculationError("The logical AND operator (&&) could not be evaluated. Check that both operands are valid numbers.", ErrorType::SyntaxError);
+        }
+    }
+
+
+
+
+
+
+    // Handle ||
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        std::unique_ptr<CalculationPart>& part = calculation_parts[i];
+
+        if (i == 0 || i == calculation_parts.size() - 1) {
+            if (dynamic_cast<BooleanOr*>(part.get())) {
+                throw CalculationError("The logical OR operator (||) cannot appear at the beginning or end of an expression.", ErrorType::SyntaxError);
+            }
+            continue;
+        }
+
+        std::unique_ptr<CalculationPart>& leftPart = calculation_parts[i - 1];
+        std::unique_ptr<CalculationPart>& rightPart = calculation_parts[i + 1];
+        if (Number* leftNum = dynamic_cast<Number*>(leftPart.get())) {
+            if (Number* rightNum = dynamic_cast<Number*>(rightPart.get())) {
+                if (BooleanOr* booleanOr = dynamic_cast<BooleanOr*>(part.get())) {
+                    Number result = booleanOr->Calculate(*leftNum, *rightNum);
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    calculation_parts.erase(calculation_parts.begin() + i);
+                    i--;
+                }
+            } else {
+                if (dynamic_cast<BooleanOr*>(part.get())) {
+                    throw CalculationError("The logical OR operator (||) requires numeric operands.", ErrorType::SyntaxError);
+                }
+            }
+        } else {
+            if (dynamic_cast<BooleanOr*>(part.get())) {
+                throw CalculationError("The logical OR operator (||) requires numeric operands.", ErrorType::SyntaxError);
+            }
+        }
+    }
+
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        if (dynamic_cast<BooleanOr*>(calculation_parts[i].get())) {
+            throw CalculationError("The logical OR operator (||) could not be evaluated. Check that both operands are valid numbers.", ErrorType::SyntaxError);
         }
     }
 

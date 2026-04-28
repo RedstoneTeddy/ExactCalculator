@@ -36,6 +36,11 @@
         "${workspaceFolder}/mypy.ini",
         "--exclude",
         "(^|[\\\\/])pybind11([\\\\/]|$)"
-    ]
+    ],
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 
 }

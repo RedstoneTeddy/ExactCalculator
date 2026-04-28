@@ -35,6 +35,7 @@ pybind11_add_module(cpp_main
 	backend/functions/minmax.cpp
 	backend/functions/combinatorics.cpp
 	backend/functions/round.cpp
+	backend/functions/boolean.cpp
 )
 
 # target_include_directories(cpp_main PRIVATE

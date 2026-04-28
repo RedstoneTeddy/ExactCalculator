@@ -21,6 +21,7 @@
 #include "functions/minmax.hpp"
 #include "functions/combinatorics.hpp"
 #include "functions/round.hpp"
+#include "functions/boolean.hpp"
 
 std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& part) {
     if (const Number* number = dynamic_cast<const Number*>(&part)) {
@@ -115,6 +116,36 @@ std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& par
     }
     if (const Floor* floor = dynamic_cast<const Floor*>(&part)) {
         return std::make_unique<Floor>(*floor);
+    }
+    if (const BooleanEquals* booleanEquals = dynamic_cast<const BooleanEquals*>(&part)) {
+        return std::make_unique<BooleanEquals>(*booleanEquals);
+    }
+    if (const BooleanNotEquals* booleanNotEquals = dynamic_cast<const BooleanNotEquals*>(&part)) {
+        return std::make_unique<BooleanNotEquals>(*booleanNotEquals);
+    }
+    if (const BooleanGreater* booleanGreater = dynamic_cast<const BooleanGreater*>(&part)) {
+        return std::make_unique<BooleanGreater>(*booleanGreater);
+    }
+    if (const BooleanGreaterEquals* booleanGreaterEquals = dynamic_cast<const BooleanGreaterEquals*>(&part)) {
+        return std::make_unique<BooleanGreaterEquals>(*booleanGreaterEquals);
+    }
+    if (const BooleanLess* booleanLess = dynamic_cast<const BooleanLess*>(&part)) {
+        return std::make_unique<BooleanLess>(*booleanLess);
+    }
+    if (const BooleanLessEquals* booleanLessEquals = dynamic_cast<const BooleanLessEquals*>(&part)) {
+        return std::make_unique<BooleanLessEquals>(*booleanLessEquals);
+    }
+    if (const BooleanAnd* booleanAnd = dynamic_cast<const BooleanAnd*>(&part)) {
+        return std::make_unique<BooleanAnd>(*booleanAnd);
+    }
+    if (const BooleanOr* booleanOr = dynamic_cast<const BooleanOr*>(&part)) {
+        return std::make_unique<BooleanOr>(*booleanOr);
+    }
+    if (const BooleanNot* booleanNot = dynamic_cast<const BooleanNot*>(&part)) {
+        return std::make_unique<BooleanNot>(*booleanNot);
+    }
+    if (const BooleanIf* booleanIf = dynamic_cast<const BooleanIf*>(&part)) {
+        return std::make_unique<BooleanIf>(*booleanIf);
     }
 
     throw CalculationError("Internal error: unsupported token in expression cloning.", ErrorType::SyntaxError);

@@ -22,6 +22,7 @@
 #include "functions/minmax.hpp"
 #include "functions/combinatorics.hpp"
 #include "functions/round.hpp"
+#include "functions/boolean.hpp"
 
 #include "calculation/addition.hpp"
 #include "calculation/subtraction.hpp"
@@ -53,7 +54,10 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
     std::string currentPart = "";
 
 
-    for (char c : input) {
+    for (std::size_t index = 0; index < input.size(); index++) {
+        char c = input[index];
+        char next = index + 1 < input.size() ? input[index + 1] : '\0';
+
         const bool isExponentSign =
             (c == '+' || c == '-') &&
             !currentPart.empty() &&
@@ -61,6 +65,43 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
 
         if (isExponentSign) {
             currentPart += c;
+            continue;
+        }
+
+        if (c == '=' && next == '=') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<BooleanEquals>());
+            index++;
+            continue;
+        }
+        else if (c == '!' && next == '=') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<BooleanNotEquals>());
+            index++;
+            continue;
+        }
+        else if (c == '<' && next == '=') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<BooleanLessEquals>());
+            index++;
+            continue;
+        }
+        else if (c == '>' && next == '=') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<BooleanGreaterEquals>());
+            index++;
+            continue;
+        }
+        else if (c == '&' && next == '&') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<BooleanAnd>());
+            index++;
+            continue;
+        }
+        else if (c == '|' && next == '|') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<BooleanOr>());
+            index++;
             continue;
         }
 
@@ -85,6 +126,21 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
         else if (c == '^') {
             HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
             parts.push_back(std::make_unique<Exponent>(rootSignificant));
+        }
+        else if (c == '!') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<BooleanNot>());
+            continue;
+        }
+        else if (c == '<') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<BooleanLess>());
+            continue;
+        }
+        else if (c == '>') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<BooleanGreater>());
+            continue;
         }
 
 
@@ -269,6 +325,12 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
         else if (currentPart == "Floor") {
             Floor floor;
             parts.push_back(std::make_unique<Floor>(floor));
+        }
+
+        // If-Function
+        else if (currentPart == "If" || currentPart == "Ifelse" || currentPart == "IfElse" || currentPart == "Elif") {
+            BooleanIf ifFunction;
+            parts.push_back(std::make_unique<BooleanIf>(ifFunction));
         }
 
         // Treat unknown functions as variables, so they can be defined by the user

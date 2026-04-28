@@ -50,5 +50,6 @@ def Help_functions() -> str:
     - Round{n}     : Round n to the nearest integer (e.g., Round{3.6} = 4)
     - Ceil{n}      : Round n up to the nearest integer (e.g., Ceil{3.2} = 4)
     - Floor{n}     : Round n down to the nearest integer (e.g., Floor{3.8} = 3)
+    - If{cond, true_expr, false_expr} : Evaluates cond; if true, returns true_expr, else returns false_expr (e.g., If{(1 > 0) && (1 != 2), 42, 10} = 42)
 
 """
