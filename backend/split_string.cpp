@@ -25,6 +25,7 @@
 #include "functions/boolean.hpp"
 #include "functions/prime.hpp"
 #include "functions/random.hpp"
+#include "functions/userfunctions.hpp"
 
 #include "calculation/addition.hpp"
 #include "calculation/subtraction.hpp"
@@ -57,6 +58,20 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
     std::string currentPart = "";
 
 
+    // Quick check if a function definition follows (:=)
+    std::size_t definitionPos = std::string::npos;
+    for (std::size_t index = 0; index < input.size(); index++) {
+        char c = input[index];
+        char next = index + 1 < input.size() ? input[index + 1] : '\0';
+        if (c == ':' && next == '=') {
+            definitionPos = index;
+            break;
+        }
+    }
+
+
+
+
     for (std::size_t index = 0; index < input.size(); index++) {
         char c = input[index];
         char next = index + 1 < input.size() ? input[index + 1] : '\0';
@@ -71,39 +86,47 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
             continue;
         }
 
+        const bool inFunctionDefinition = definitionPos != std::string::npos && index <= definitionPos;
+
         if (c == '=' && next == '=') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<BooleanEquals>());
             index++;
             continue;
         }
         else if (c == '!' && next == '=') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<BooleanNotEquals>());
             index++;
             continue;
         }
         else if (c == '<' && next == '=') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<BooleanLessEquals>());
             index++;
             continue;
         }
         else if (c == '>' && next == '=') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<BooleanGreaterEquals>());
             index++;
             continue;
         }
         else if (c == '&' && next == '&') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<BooleanAnd>());
             index++;
             continue;
         }
         else if (c == '|' && next == '|') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<BooleanOr>());
+            index++;
+            continue;
+        }
+        else if (definitionPos != std::string::npos && c == ':' && next == '=') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
+            parts.push_back(std::make_unique<DefineEqualSign>());
             index++;
             continue;
         }
@@ -111,41 +134,41 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
 
         // +, -, *, /, ^, %
         if (c == '+') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<Addition>());
         }
         else if (c == '-') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<Subtraction>());
         }
         else if (c == '*') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<Multiplication>());
         }
         else if (c == '/') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<Division>());
         }
         else if (c == '%') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<Modulo>());
         }
         else if (c == '^') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<Exponent>(rootSignificant));
         }
         else if (c == '!') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<BooleanNot>());
             continue;
         }
         else if (c == '<') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<BooleanLess>());
             continue;
         }
         else if (c == '>') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<BooleanGreater>());
             continue;
         }
@@ -154,28 +177,28 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
 
         // Brackets
         else if (c == '(') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<Bracket>(true, false));
         }
         else if (c == ')') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<Bracket>(false, false));
         }
         else if (c == '{') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<Bracket>(true, true));
         }
         else if (c == '}') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<Bracket>(false, true));
         }
 
         else if (c == '=') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<EqualSign>());
         }
         else if (c == ',') {
-            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant, inFunctionDefinition);
             parts.push_back(std::make_unique<CommaSeparator>());
         }
 
@@ -190,12 +213,18 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
         }
     }
 
-    HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+    HandleOperator(parts, currentPart, maxSignificant, rootSignificant, false);
 
     return parts;
 }
 
-void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::string& currentPart, int maxSignificant, int rootSignificant) {
+void HandleOperator(
+    std::vector<std::unique_ptr<CalculationPart>>& parts, 
+    std::string& currentPart, 
+    int maxSignificant, 
+    int rootSignificant, 
+    bool functionDefinition
+) {
     if (currentPart.empty()) {
         return;
     }
@@ -372,8 +401,13 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
 
         // Treat unknown functions as variables, so they can be defined by the user
         else {
-            Variable var(currentPart, nullptr, nullptr);
-            parts.push_back(std::make_unique<Variable>(var));
+            if (functionDefinition) {
+                UserFunction func(currentPart, nullptr, nullptr, nullptr);
+                parts.push_back(std::make_unique<UserFunction>(func));
+            } else {
+                Variable var(currentPart, nullptr, nullptr);
+                parts.push_back(std::make_unique<Variable>(var));
+            }
         }
 
 
@@ -383,9 +417,14 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
             throw CalculationError("Variable names may only contain letters, digits, and underscores.", ErrorType::SyntaxError);
         }
 
-        // Handle variables
-        Variable var(currentPart, nullptr, nullptr);
-        parts.push_back(std::make_unique<Variable>(var));
+        // Handle variables and user-defined functions
+        if (functionDefinition) {
+            UserFunction func(currentPart, nullptr, nullptr, nullptr);
+            parts.push_back(std::make_unique<UserFunction>(func));
+        } else {
+            Variable var(currentPart, nullptr, nullptr);
+            parts.push_back(std::make_unique<Variable>(var));
+        }
 
     
     // Numbers

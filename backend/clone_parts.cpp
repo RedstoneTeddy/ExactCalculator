@@ -25,6 +25,7 @@
 #include "functions/boolean.hpp"
 #include "functions/prime.hpp"
 #include "functions/random.hpp"
+#include "functions/userfunctions.hpp"
 
 std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& part) {
     if (const Number* number = dynamic_cast<const Number*>(&part)) {
@@ -167,6 +168,9 @@ std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& par
     }
     if (const RandomInt* random = dynamic_cast<const RandomInt*>(&part)) {
         return std::make_unique<RandomInt>(*random);
+    }
+    if (const UserFunction* userFunc = dynamic_cast<const UserFunction*>(&part)) {
+        return std::make_unique<UserFunction>(*userFunc);
     }
 
     throw CalculationError("Internal error: unsupported token in expression cloning.", ErrorType::SyntaxError);

@@ -224,3 +224,28 @@ def test_floor() -> None:
         assert result == pytest.approx(expected, rel=tolerance), f"Floor failed for floor({a_str}): expected {expected}, got {result}"
 
 
+def test_randomInt() -> None:
+    calc: cpp_main.Calculator = cpp_main.Calculator(100)
+    calc.FinalSignificance = 100
+
+    how_many_not_generated: int = 0
+
+    counted : list[int] = [0 for _ in range(101)]
+    for _ in range(1000):
+        calc.Calculate("RandomInt{100}")
+        if (calc.Get_last_error() is not None and calc.Get_last_error() != ""):
+            pytest.fail(f"Error during calculation of RandomInt{{100}}: {calc.Get_last_error()}")
+        result: float = calc.Calculate_double()
+        if result < 0 or result > 100 or not result.is_integer():
+            pytest.fail(f"RandomInt{{100}} returned invalid value: {result}")
+        counted[int(result)] += 1
+
+    for i in range(101):
+        if counted[i] == 0:
+            how_many_not_generated += 1
+
+    assert how_many_not_generated < 10, f"RandomInt{{100}} failed to generate {how_many_not_generated} numbers in 1000 tries"
+    
+
+
+

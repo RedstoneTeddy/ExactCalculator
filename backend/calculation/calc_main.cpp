@@ -27,6 +27,7 @@
 #include "../functions/boolean.hpp"
 #include "../functions/prime.hpp"   
 #include "../functions/random.hpp"
+#include "../functions/userfunctions.hpp"   
 
 #include "../CalculationError.hpp"
 
@@ -34,7 +35,18 @@
 
 Calc_main::Calc_main() {
     // varNumbers and varNames are initialized as empty vectors by default
+    // Initialize function definition pointers
+    allFunctionNames = new std::vector<std::string>();
+    allFormulas = new std::vector<std::vector<std::unique_ptr<CalculationPart>>>();
+    allParameterNames = new std::vector<std::vector<std::string>>();
 }
+
+Calc_main::~Calc_main() {
+    delete allFunctionNames;
+    delete allFormulas;
+    delete allParameterNames;
+}
+
 
 
 std::vector<Number> Calc_main::extractNumbers(int i, int openFunctionBracket, std::vector<std::unique_ptr<CalculationPart>>& calculation_parts) {
@@ -96,6 +108,121 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                 VARIABLES_HPP::SetVariable(variable->GetName(), subResult, &varNumbers, &varNames);
                 return subResult;
             }
+        }
+    }
+
+    auto tryGetFunctionTokenName = [](CalculationPart* part, std::string& outName) {
+        if (UserFunction* userFunc = dynamic_cast<UserFunction*>(part)) {
+            outName = userFunc->GetName();
+            return true;
+        }
+        if (Variable* variable = dynamic_cast<Variable*>(part)) {
+            outName = variable->GetName();
+            return true;
+        }
+        return false;
+    };
+
+    auto tryParseFunctionSignature = [&](int defineIndex, std::string& functionName, std::vector<std::string>& parameterNames) {
+        if (defineIndex < 3) {
+            return false;
+        }
+
+        if (!tryGetFunctionTokenName(calculation_parts[0].get(), functionName)) {
+            return false;
+        }
+
+        Bracket* openBracket = dynamic_cast<Bracket*>(calculation_parts[1].get());
+        if (!openBracket || !openBracket->isOpen || !openBracket->isFunctionBracket) {
+            return false;
+        }
+
+        int closeIndex = -1;
+        int depth = 0;
+        for (int i = 1; i < defineIndex; i++) {
+            Bracket* bracket = dynamic_cast<Bracket*>(calculation_parts[i].get());
+            if (bracket && bracket->isFunctionBracket) {
+                depth += bracket->isOpen ? 1 : -1;
+                if (depth == 0) {
+                    closeIndex = i;
+                    break;
+                }
+                if (depth < 0) {
+                    return false;
+                }
+            }
+        }
+
+        if (closeIndex != defineIndex - 1) {
+            return false;
+        }
+
+        if (closeIndex > 2) {
+            bool expectName = true;
+            for (int i = 2; i < closeIndex; i++) {
+                if (expectName) {
+                    std::string paramName;
+                    if (!tryGetFunctionTokenName(calculation_parts[i].get(), paramName)) {
+                        return false;
+                    }
+                    parameterNames.push_back(paramName);
+                    expectName = false;
+                } else {
+                    if (!dynamic_cast<CommaSeparator*>(calculation_parts[i].get())) {
+                        return false;
+                    }
+                    expectName = true;
+                }
+            }
+            if (expectName) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    auto defineUserFunctionAt = [&](int defineIndex, bool requireDefinition) {
+        std::string functionName;
+        std::vector<std::string> parameterNames;
+        if (!tryParseFunctionSignature(defineIndex, functionName, parameterNames)) {
+            if (requireDefinition) {
+                throw CalculationError("Invalid function definition syntax.", ErrorType::SyntaxError);
+            }
+            return false;
+        }
+
+        std::vector<std::unique_ptr<CalculationPart>> formulaParts;
+        for (int i = defineIndex + 1; i < calculation_parts.size(); i++) {
+            formulaParts.push_back(std::move(calculation_parts[i]));
+        }
+        if (formulaParts.empty()) {
+            throw CalculationError("Function definition is missing a body.", ErrorType::SyntaxError);
+        }
+
+        DefineUserFunction(functionName, parameterNames, std::move(formulaParts), allFunctionNames, allFormulas, allParameterNames);
+        return true;
+    };
+
+    int defineIndex = -1;
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        if (dynamic_cast<DefineEqualSign*>(calculation_parts[i].get())) {
+            defineIndex = i;
+            break;
+        }
+    }
+
+    if (defineIndex != -1) {
+        defineUserFunctionAt(defineIndex, true);
+        return Number(1);
+    }
+
+    for (int i = 0; i < calculation_parts.size(); i++) {
+        if (dynamic_cast<EqualSign*>(calculation_parts[i].get())) {
+            if (defineUserFunctionAt(i, false)) {
+                return Number(1);
+            }
+            break;
         }
     }
 
@@ -344,6 +471,25 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                                 requireArgumentCount(functionArguments, 1, "RandomInt");
                                 Number result = randomInt->Calculate(functionArguments[0]);
                                 replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
+                            else if (UserFunction* userFunc = dynamic_cast<UserFunction*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                // Provide the user-function object with pointers to the global function storage
+                                userFunc->SetAllFunctionPointers(allFunctionNames, allFormulas, allParameterNames);
+                                Number result = userFunc->Calculate(functionArguments, *this);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
+                            else if (Variable* variable = dynamic_cast<Variable*>(functionPart.get())) {
+                                if (std::find(allFunctionNames->begin(), allFunctionNames->end(), variable->GetName()) != allFunctionNames->end()) {
+                                    std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                    UserFunction userFunc(variable->GetName(), allFunctionNames, allFormulas, allParameterNames);
+                                    Number result = userFunc.Calculate(functionArguments, *this);
+                                    replaceFunctionCallWithResult(functionPart, result, i);
+                                } else {
+                                    throw CalculationError("Function brackets must follow a valid function name.", ErrorType::SyntaxError);
+                                }
                             }
 
                             else {

@@ -39,6 +39,7 @@ pybind11_add_module(cpp_main
 	backend/functions/prime.cpp
 	backend/calculation/modulo.cpp
 	backend/functions/random.cpp
+	backend/functions/userfunctions.cpp
 )
 
 # target_include_directories(cpp_main PRIVATE

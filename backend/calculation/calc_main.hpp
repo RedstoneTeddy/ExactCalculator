@@ -23,12 +23,19 @@ class Calc_main {
 private:
     std::vector<Number> varNumbers;
     std::vector<std::string> varNames;
+    
+    std::vector<std::string>* allFunctionNames;
+    std::vector<std::vector<std::unique_ptr<CalculationPart>>>* allFormulas;
+    std::vector<std::vector<std::string>>* allParameterNames;
+
+
 public:
     std::vector<Number> extractNumbers(int i, int openFunctionBracket, std::vector<std::unique_ptr<CalculationPart>>& calculation_parts);
     std::vector<std::vector<std::unique_ptr<CalculationPart>>> extractSubCalculations(int i, int openFunctionBracket, std::vector<std::unique_ptr<CalculationPart>>& calculation_parts);
 
     Number Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& calculation_parts);
     Calc_main();
+    ~Calc_main();
     
     std::vector<std::string> GetVariableNames() {
         return varNames;
