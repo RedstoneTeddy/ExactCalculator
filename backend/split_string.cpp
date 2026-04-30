@@ -23,11 +23,13 @@
 #include "functions/combinatorics.hpp"
 #include "functions/round.hpp"
 #include "functions/boolean.hpp"
+#include "functions/prime.hpp"
 
 #include "calculation/addition.hpp"
 #include "calculation/subtraction.hpp"
 #include "calculation/multiplication.hpp"
 #include "calculation/division.hpp"
+#include "calculation/modulo.hpp"
 #include "calculation/exponent.hpp"
 
 namespace {
@@ -106,7 +108,7 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
         }
 
 
-        // +, -, *
+        // +, -, *, /, ^, %
         if (c == '+') {
             HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
             parts.push_back(std::make_unique<Addition>());
@@ -122,6 +124,10 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
         else if (c == '/') {
             HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
             parts.push_back(std::make_unique<Division>());
+        }
+        else if (c == '%') {
+            HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
+            parts.push_back(std::make_unique<Modulo>());
         }
         else if (c == '^') {
             HandleOperator(parts, currentPart, maxSignificant, rootSignificant);
@@ -309,6 +315,12 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
             parts.push_back(std::make_unique<nCr>(ncr));
         }
 
+        // Abs
+        else if (currentPart == "Abs" || currentPart == "AbsoluteValue") {
+            Abs abs;
+            parts.push_back(std::make_unique<Abs>(abs));
+        }
+
         // Round
         else if (currentPart == "Round") {
             Round round;
@@ -331,6 +343,24 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
         else if (currentPart == "If" || currentPart == "Ifelse" || currentPart == "IfElse" || currentPart == "Elif") {
             BooleanIf ifFunction;
             parts.push_back(std::make_unique<BooleanIf>(ifFunction));
+        }
+
+        // GCD
+        else if (currentPart == "Gcd" || currentPart == "GCD") {
+            Gcd gcd;
+            parts.push_back(std::make_unique<Gcd>(gcd));
+        }
+
+        // LCM
+        else if (currentPart == "Lcm" || currentPart == "LCM") {
+            Lcm lcm;
+            parts.push_back(std::make_unique<Lcm>(lcm));
+        }
+
+        // Nth prime
+        else if (currentPart == "Nthprime" || currentPart == "NthPrime") {
+            Nthprime nthprime;
+            parts.push_back(std::make_unique<Nthprime>(nthprime));
         }
 
         // Treat unknown functions as variables, so they can be defined by the user

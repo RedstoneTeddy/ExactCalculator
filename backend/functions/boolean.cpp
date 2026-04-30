@@ -137,7 +137,3 @@ Number BooleanIf::Calculate(Number condition, Number trueValue, Number falseValu
     return result;
 }
 
-
-
-
-

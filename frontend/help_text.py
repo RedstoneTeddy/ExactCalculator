@@ -47,9 +47,13 @@ def Help_functions() -> str:
     - Max{a, b}    : Maximum of a and b (e.g., Max{3, 5} = 5)
     - Perm{n, k}   : Permutations of n items taken k at a time (e.g., Perm{5, 2} = 20)
     - Choose{n, k} : Combinations of n items taken k at a time (e.g., Choose{5, 2} = 10)
+    - Abs{n}       : Absolute value of n (e.g., Abs{-5} = 5)
     - Round{n}     : Round n to the nearest integer (e.g., Round{3.6} = 4)
     - Ceil{n}      : Round n up to the nearest integer (e.g., Ceil{3.2} = 4)
     - Floor{n}     : Round n down to the nearest integer (e.g., Floor{3.8} = 3)
     - If{cond, true_expr, false_expr} : Evaluates cond; if true, returns true_expr, else returns false_expr (e.g., If{(1 > 0) && (1 != 2), 42, 10} = 42)
-
+    - Gcd{a, b}    : Greatest common divisor of a and b (e.g., Gcd{48, 18} = 6)
+    - Lcm{a, b}    : Least common multiple of a and b (e.g., Lcm{48, 18} = 144)
+    - Nthprime{n}  : The n-th prime number (e.g., Nthprime{1} = 2, Nthprime{2} = 3, Nthprime{3} = 5, etc.)
+    
 """

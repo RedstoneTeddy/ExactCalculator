@@ -166,6 +166,21 @@ def test_min() -> None:
         result: float = calc.Calculate_double()
         assert result == pytest.approx(expected, rel=tolerance), f"Minimum failed for min({a_str}, {b_str}): expected {expected}, got {result}"
 
+def test_abs() -> None:
+    calc: cpp_main.Calculator = cpp_main.Calculator(100)
+    calc.FinalSignificance = 100
+    tolerance: float = 1e-5 
+
+    for _ in range(1000):
+        a_str, a = tests.number_gen.GenerateNumber()
+        expected: float = abs(a)
+        calc.Calculate("Abs{"+a_str+"}")
+        if (calc.Get_last_error() is not None and calc.Get_last_error() != ""):
+            pytest.fail(f"Error during calculation of abs({a_str}): {calc.Get_last_error()}")
+        result: float = calc.Calculate_double()
+        assert result == pytest.approx(expected, rel=tolerance), f"Absolute value failed for abs({a_str}): expected {expected}, got {result}"
+
+
 def test_round() -> None:
     calc: cpp_main.Calculator = cpp_main.Calculator(100)
     calc.FinalSignificance = 100

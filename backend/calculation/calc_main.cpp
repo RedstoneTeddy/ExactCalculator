@@ -9,6 +9,7 @@
 #include "subtraction.hpp"
 #include "multiplication.hpp"
 #include "division.hpp"
+#include "modulo.hpp"
 #include "exponent.hpp"
 #include "variables.hpp"
 #include "equal_sign.hpp"
@@ -24,6 +25,7 @@
 #include "../functions/combinatorics.hpp"
 #include "../functions/round.hpp"
 #include "../functions/boolean.hpp"
+#include "../functions/prime.hpp"   
 
 #include "../CalculationError.hpp"
 
@@ -280,6 +282,13 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                                 replaceFunctionCallWithResult(functionPart, result, i);
                             }
 
+                            else if (Abs* abs = dynamic_cast<Abs*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 1, "Abs");
+                                Number result = abs->Calculate(functionArguments[0]);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
                             else if (Round* round = dynamic_cast<Round*>(functionPart.get())) {
                                 std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 1, "Round");
@@ -307,7 +316,27 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                                 Number result = ifFunction->Calculate(functionArguments[0], functionArguments[1], functionArguments[2]);
                                 replaceFunctionCallWithResult(functionPart, result, i);
                             }
-                            
+
+                            else if (Gcd* gcd = dynamic_cast<Gcd*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 2, "Gcd");
+                                Number result = gcd->Calculate(functionArguments[0], functionArguments[1]);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
+                            else if (Lcm* lcm = dynamic_cast<Lcm*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 2, "Lcm");
+                                Number result = lcm->Calculate(functionArguments[0], functionArguments[1]);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
+                            else if (Nthprime* nthprime = dynamic_cast<Nthprime*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 1, "Nthprime");
+                                Number result = nthprime->Calculate(functionArguments[0]);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
 
                             else {
                                 throw CalculationError("Function brackets must follow a valid function name.", ErrorType::SyntaxError);
@@ -460,7 +489,7 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
 
     
 
-    // Handle * and /
+    // Handle * and / and %
     for (int i = 0; i < calculation_parts.size(); i++) {
         std::unique_ptr<CalculationPart>& part = calculation_parts[i];
 
@@ -488,6 +517,15 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                 } 
                 else if (Division* division = dynamic_cast<Division*>(part.get())) {
                     Number result = division->Calculate(*leftNum, *rightNum);
+
+                    // Replace left part with result, remove operator and right part
+                    leftPart = std::make_unique<Number>(result);
+                    calculation_parts.erase(calculation_parts.begin() + i); // Remove operator
+                    calculation_parts.erase(calculation_parts.begin() + i); // Remove right part    
+                    i--; // Move back index to account for removed parts
+                }
+                else if (Modulo* modulo = dynamic_cast<Modulo*>(part.get())) {
+                    Number result = modulo->Calculate(*leftNum, *rightNum);
 
                     // Replace left part with result, remove operator and right part
                     leftPart = std::make_unique<Number>(result);

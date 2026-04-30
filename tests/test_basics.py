@@ -64,6 +64,23 @@ def test_division() -> None:
         result: float = calc.Calculate_double()
         assert result == pytest.approx(expected, rel=tolerance), f"Division failed for {a_str} / {b_str}: expected {expected}, got {result}"
 
+def test_modulo() -> None:
+    calc: cpp_main.Calculator = cpp_main.Calculator(100)
+    calc.FinalSignificance = 100
+    tolerance: float = 1e-5
+
+    for _ in range(1000):
+        a_str, a = tests.number_gen.GenerateNumber()
+        b_str, b = tests.number_gen.GenerateNumber()
+        if b == 0:
+            continue
+        expected: float = a % b
+        calc.Calculate(f"{a_str} % {b_str}")
+        if (calc.Get_last_error() is not None and calc.Get_last_error() != ""):
+            pytest.fail(f"Error during calculation of {a_str} % {b_str}: {calc.Get_last_error()}")
+        result: float = calc.Calculate_double()
+        assert result == pytest.approx(expected, rel=tolerance), f"Modulo failed for {a_str} % {b_str}: expected {expected}, got {result}"
+
 def test_integer_exponentiation() -> None:
     calc: cpp_main.Calculator = cpp_main.Calculator(100)
     calc.FinalSignificance = 100

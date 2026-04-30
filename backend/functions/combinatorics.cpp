@@ -36,5 +36,13 @@ Number nCr::Calculate(Number n, Number r) {
     return division.Calculate(nFactorial, denominator);
 }
 
+Number Abs::Calculate(Number number) {
+    Number result(number.GetMaxSignificant());
+
+    result.SetNumber(false, number.GetDigits(), number.GetExponent());
+    result.CorrectForSignificance();
+
+    return result;
+}
 
 

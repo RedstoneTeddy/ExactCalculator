@@ -20,5 +20,10 @@ public:
     Number Calculate(Number n, Number r);
 };
 
+class Abs : public CalculationPart {
+public:
+    Number Calculate(Number number);
+};
+
 
 #endif // COMBINATORICS_HPP

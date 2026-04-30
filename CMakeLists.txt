@@ -36,6 +36,8 @@ pybind11_add_module(cpp_main
 	backend/functions/combinatorics.cpp
 	backend/functions/round.cpp
 	backend/functions/boolean.cpp
+	backend/functions/prime.cpp
+	backend/calculation/modulo.cpp
 )
 
 # target_include_directories(cpp_main PRIVATE

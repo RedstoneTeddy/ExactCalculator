@@ -8,6 +8,7 @@
 #include "calculation/subtraction.hpp"
 #include "calculation/multiplication.hpp"
 #include "calculation/division.hpp"
+#include "calculation/modulo.hpp"
 #include "calculation/exponent.hpp"
 #include "calculation/equal_sign.hpp"
 
@@ -22,6 +23,7 @@
 #include "functions/combinatorics.hpp"
 #include "functions/round.hpp"
 #include "functions/boolean.hpp"
+#include "functions/prime.hpp"
 
 std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& part) {
     if (const Number* number = dynamic_cast<const Number*>(&part)) {
@@ -32,6 +34,9 @@ std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& par
     }
     if (const Exponent* exponent = dynamic_cast<const Exponent*>(&part)) {
         return std::make_unique<Exponent>(*exponent);
+    }
+    if (const Modulo* modulo = dynamic_cast<const Modulo*>(&part)) {
+        return std::make_unique<Modulo>(*modulo);
     }
     if (const Division* division = dynamic_cast<const Division*>(&part)) {
         return std::make_unique<Division>(*division);
@@ -108,6 +113,9 @@ std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& par
     if (const nCr* ncr = dynamic_cast<const nCr*>(&part)) {
         return std::make_unique<nCr>(*ncr);
     }
+    if (const Abs* abs = dynamic_cast<const Abs*>(&part)) {
+        return std::make_unique<Abs>(*abs);
+    }
     if (const Round* round = dynamic_cast<const Round*>(&part)) {
         return std::make_unique<Round>(*round);
     }
@@ -146,6 +154,15 @@ std::unique_ptr<CalculationPart> CloneCalculationPart(const CalculationPart& par
     }
     if (const BooleanIf* booleanIf = dynamic_cast<const BooleanIf*>(&part)) {
         return std::make_unique<BooleanIf>(*booleanIf);
+    }
+    if (const Gcd* gcd = dynamic_cast<const Gcd*>(&part)) {
+        return std::make_unique<Gcd>(*gcd);
+    }
+    if (const Lcm* lcm = dynamic_cast<const Lcm*>(&part)) {
+        return std::make_unique<Lcm>(*lcm);
+    }
+    if (const Nthprime* nthprime = dynamic_cast<const Nthprime*>(&part)) {
+        return std::make_unique<Nthprime>(*nthprime);
     }
 
     throw CalculationError("Internal error: unsupported token in expression cloning.", ErrorType::SyntaxError);
