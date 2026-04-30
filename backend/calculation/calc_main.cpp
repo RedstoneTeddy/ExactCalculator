@@ -26,6 +26,7 @@
 #include "../functions/round.hpp"
 #include "../functions/boolean.hpp"
 #include "../functions/prime.hpp"   
+#include "../functions/random.hpp"
 
 #include "../CalculationError.hpp"
 
@@ -335,6 +336,13 @@ Number Calc_main::Calculate_part(std::vector<std::unique_ptr<CalculationPart>>& 
                                 std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
                                 requireArgumentCount(functionArguments, 1, "Nthprime");
                                 Number result = nthprime->Calculate(functionArguments[0]);
+                                replaceFunctionCallWithResult(functionPart, result, i);
+                            }
+
+                            else if (RandomInt* randomInt = dynamic_cast<RandomInt*>(functionPart.get())) {
+                                std::vector<Number> functionArguments = extractNumbers(i, openFunctionBracket, calculation_parts);
+                                requireArgumentCount(functionArguments, 1, "RandomInt");
+                                Number result = randomInt->Calculate(functionArguments[0]);
                                 replaceFunctionCallWithResult(functionPart, result, i);
                             }
 

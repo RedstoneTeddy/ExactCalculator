@@ -24,6 +24,7 @@
 #include "functions/round.hpp"
 #include "functions/boolean.hpp"
 #include "functions/prime.hpp"
+#include "functions/random.hpp"
 
 #include "calculation/addition.hpp"
 #include "calculation/subtraction.hpp"
@@ -361,6 +362,12 @@ void HandleOperator(std::vector<std::unique_ptr<CalculationPart>>& parts, std::s
         else if (currentPart == "Nthprime" || currentPart == "NthPrime") {
             Nthprime nthprime;
             parts.push_back(std::make_unique<Nthprime>(nthprime));
+        }
+
+        // RandomInt
+        else if (currentPart == "RandomInt" || currentPart == "Randomint" || currentPart == "RandomInteger") {
+            RandomInt randomInt;
+            parts.push_back(std::make_unique<RandomInt>(randomInt));
         }
 
         // Treat unknown functions as variables, so they can be defined by the user
