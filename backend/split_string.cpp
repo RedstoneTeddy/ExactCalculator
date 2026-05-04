@@ -48,6 +48,37 @@ bool IsValidIdentifier(const std::string& token) {
 
     return true;
 }
+
+bool IsScientificExponentSign(const std::string& token) {
+    if (token.empty()) {
+        return false;
+    }
+
+    char last = token.back();
+    if (last != 'e' && last != 'E') {
+        return false;
+    }
+
+    bool digitSeen = false;
+    bool decimalSeen = false;
+    for (std::size_t i = 0; i + 1 < token.size(); i++) {
+        char c = token[i];
+        if (c >= '0' && c <= '9') {
+            digitSeen = true;
+            continue;
+        }
+        if (c == '.') {
+            if (decimalSeen) {
+                return false;
+            }
+            decimalSeen = true;
+            continue;
+        }
+        return false;
+    }
+
+    return digitSeen;
+}
 }
 
 
@@ -78,8 +109,7 @@ std::vector<std::unique_ptr<CalculationPart>> SplitString(std::string input, int
 
         const bool isExponentSign =
             (c == '+' || c == '-') &&
-            !currentPart.empty() &&
-            (currentPart.back() == 'e' || currentPart.back() == 'E');
+            IsScientificExponentSign(currentPart);
 
         if (isExponentSign) {
             currentPart += c;
