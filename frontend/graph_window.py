@@ -1,5 +1,6 @@
 import pygame
 
+from concurrent.futures import Future, ThreadPoolExecutor
 import frontend.graph_calculation
 import time
 import math
@@ -30,6 +31,14 @@ class GraphWindow:
 
         self.moved: bool = False
 
+        self._calc_executor: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=1)
+        self._calc_future: Future | None = None
+        self._calc_pending: tuple[tuple[float, float], int] | None = None
+        self._calc_functions: list[str] = []
+        self._calc_x_values: list[float] = []
+        self._calc_started_at: float = 0.0
+        self._calc_show_overlay: bool = False
+
 
     def Resize_check(self) -> None:
         new_size: tuple[int, int] = pygame.display.get_window_size()
@@ -59,6 +68,14 @@ class GraphWindow:
 
 
     def Load_function(self, functions: str, initialZoom: int) -> None:
+        if self._calc_future is not None:
+            self._calc_future.cancel()
+        self._calc_future = None
+        self._calc_pending = None
+        self._calc_functions = []
+        self._calc_x_values = []
+        self._calc_show_overlay = False
+
         self.x_values = []
         self.y_values = []
         self.functions = []
@@ -91,8 +108,12 @@ class GraphWindow:
             self.screen.fill((255, 255, 255)) # Clear the screen with white background
 
             self.Check_for_moving()
+            self._poll_calculation()
 
             self.Draw_graph(self.x_size, self.y_size, 1 / 2 ** self.zoom)
+
+            if self._calc_future is not None and self._calc_show_overlay:
+                self.Draw_calculating_overlay()
 
             if self.screen is not None:
                 self.last_frame = self.screen.copy()
@@ -103,6 +124,9 @@ class GraphWindow:
             self.clock.tick(60) # Limit to 60 FPS
 
         self.screen = None
+        if self._calc_executor is not None:
+            self._calc_executor.shutdown(wait=False)
+            self._calc_executor = None
         pygame.quit()
 
 
@@ -124,23 +148,59 @@ class GraphWindow:
 
         if len(x_to_calculate) == 0:
             return
-        elif len(x_to_calculate) > 100:
-            self.Draw_calculating_overlay()
 
-        # Calculate all y values
-        start_time = time.time()
-        y_new: list[list[float | None]] = frontend.graph_calculation.Calculate_graphs(self.functions, timeout=self.timeout, x_values=x_to_calculate, significance=self.significance)
-        end_time = time.time()
-        self.time_calculation = end_time - start_time
+        if self._calc_future is not None:
+            self._calc_pending = (x_size, zoom)
+            return
 
-        # Sort new x and new y into old lists
-        for x_i in range(len(x_to_calculate)):
-            x_value = x_to_calculate[x_i]
-            self.x_values.append(x_value)
+        self._start_calculation(x_to_calculate)
 
-            for func_i in range(len(self.functions)):
-                y_value: float | None = y_new[func_i][x_i]
-                self.y_values[func_i][x_value] = y_value
+    def _start_calculation(self, x_to_calculate: list[float]) -> None:
+        if self._calc_executor is None:
+            return
+
+        self._calc_functions = list(self.functions)
+        self._calc_x_values = x_to_calculate
+        self._calc_started_at = time.time()
+        self._calc_show_overlay = len(x_to_calculate) > 100
+
+        # Run the heavy calculation off the main thread to keep the window responsive.
+        self._calc_future = self._calc_executor.submit(
+            frontend.graph_calculation.Calculate_graphs,
+            self._calc_functions,
+            self.timeout,
+            x_to_calculate,
+            self.significance,
+        )
+
+    def _poll_calculation(self) -> None:
+        if self._calc_future is None or not self._calc_future.done():
+            return
+
+        try:
+            y_new = self._calc_future.result()
+        except Exception:
+            y_new = None
+
+        self.time_calculation = time.time() - self._calc_started_at
+        self._calc_future = None
+        self._calc_show_overlay = False
+
+        if y_new is not None and self._calc_functions == self.functions:
+            for x_i in range(len(self._calc_x_values)):
+                x_value = self._calc_x_values[x_i]
+                self.x_values.append(x_value)
+
+                for func_i in range(len(self.functions)):
+                    y_value: float | None = y_new[func_i][x_i]
+                    self.y_values[func_i][x_value] = y_value
+
+        self._calc_x_values = []
+
+        if self._calc_pending is not None:
+            pending_x_size, pending_zoom = self._calc_pending
+            self._calc_pending = None
+            self.Calculate_points(pending_x_size, pending_zoom)
 
 
 
@@ -348,13 +408,6 @@ class GraphWindow:
 
 
     def Prepare_graph_drawing(self) -> None:
-        point_distance: float = 1 / 2 ** self.zoom
-        
-        wanted_x_values: list[float] = []
-        for x_i in range(int(self.x_size[0] / point_distance), int(self.x_size[1] / point_distance) + 1, 1):
-            x_value: float = x_i * point_distance
-            wanted_x_values.append(x_value)
-        
         self.Calculate_points(self.x_size, self.zoom)
 
 
@@ -383,9 +436,6 @@ class GraphWindow:
         if not pygame.font.get_init():
             pygame.font.init()
 
-        if self.last_frame is not None:
-            self.screen.blit(self.last_frame, (0, 0))
-
         font: pygame.font.Font = pygame.font.SysFont(None, 28)
         text_surface: pygame.Surface = font.render("Calculating...", True, (20, 20, 20))
 
@@ -403,7 +453,6 @@ class GraphWindow:
         self.screen.blit(box_surface, box_rect)
         text_rect: pygame.Rect = text_surface.get_rect(center=box_rect.center)
         self.screen.blit(text_surface, text_rect)
-        pygame.display.flip()
 
     def Get_func_color(self, func_i: int) -> tuple[int, int, int]:
         # Return a color based on the function index
